@@ -136,17 +136,19 @@ def people_compact_rows():
     return errors
 
 
-@case('people.ascii_actions')
-def people_ascii_actions():
+@case('people.icon_actions')
+def people_icon_actions():
     body = method(MAIN, 'registeredPeople')
     errors = []
-    for label in ('"Pause"', '"On"', '"Fwd"', '"Bin"'):
-        if label not in body:
-            errors.append(f'missing plain ASCII action {label}')
-    for stale in ('"||"', '">"', '"->"', '\\u23F8', '\\u25B6', '\\u2192',
-                  '\\u2715', '\\uD83D\\uDDD1'):
+    for glyph in ('\\u23F8', '\\u25B6', '\\uD83D\\uDDD1'):
+        if glyph not in body:
+            errors.append(f'missing compact icon glyph {glyph}')
+    if body.count('\\u25B6') < 2:
+        errors.append('play must cover both Forward here and resume')
+    for stale in ('"Pause"', '"On"', '"Fwd"', '"Bin"', '"||"', '">"',
+                  '"->"', '\\u2192', '\\u2715'):
         if stale in body:
-            errors.append(f'non-ASCII / odd action glyph returned: {stale}')
+            errors.append(f'action must not use this glyph or word: {stale}')
     return errors
 
 
@@ -189,7 +191,7 @@ def live_single_next_action():
     primaries = re.findall(
         r'this\.(?:button|actionButton)\("([^"]+)",\s*(?:"[^"]*",\s*)?true,',
         body)
-    expected = ['Create my QR', 'Scan contact QR', 'On']
+    expected = ['Create my QR', 'Scan contact QR', '\\u25B6']
     if primaries != expected:
         errors.append(f'guided actions changed: {primaries} != {expected}')
     if 'new Switch(' in body or 'Forwarding settings' in body:
@@ -214,10 +216,10 @@ def live_status_header():
 def live_compact_actions():
     body = method(MAIN, 'live')
     errors = []
-    if 'this.actionButton("Pause"' not in body:
+    if 'this.actionButton("\\u23F8"' not in body:
         errors.append('Live pause is not the compact People-style action')
-    if 'this.actionButton("On"' not in body:
-        errors.append('Live turn-on is not the compact People-style action')
+    if 'this.actionButton("\\u25B6"' not in body:
+        errors.append('Live resume is not the compact People-style action')
     for stale in ('this.button("Pause forwarding"',
                   'this.button("Turn on forwarding"'):
         if stale in body:

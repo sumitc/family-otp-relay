@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.3.2 (`versionCode=17`)** — source of truth is the `VERSION`
+- Version: **1.3.4 (`versionCode=19`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.3.2`, `versionCode=17`.
+- `VERSION` is the source of truth: `versionName=1.3.4`, `versionCode=19`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -174,13 +174,16 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   and "Allowed senders" popups are gone. A divider precedes
   "Try offline detector". SHOW QR renders the QR inline; SCAN QR shows a
   camera glyph. Tapping the QR enlarges it.
-- **D15 ASCII actions, fixed card order (1.3.2+):** All actions use the same
-  compact `actionButton` with **plain ASCII words**: `Pause`, `On`, `Fwd`,
-  `Bin`. No Unicode symbol icons and no emoji for actions; theme colours only
-  (orange accent `#C64309`, soft-orange secondary). Live's pause/turn-on use
-  the same compact buttons as People, never full-width buttons. Every card's
-  children are strictly **title → subtitle → content**: SHOW QR is
-  "SHOW QR / to receive OTPs / QR", SCAN QR is "SCAN QR / to forward OTPs /
+- **D15 Single-glyph actions, fixed card order (1.3.2+):** Every action uses
+  the same compact `actionButton` with a **single icon glyph, never a word**:
+  `⏸` stops running forwarding, `▶` starts/resumes forwarding **and** is the
+  "Forward here" glyph, `🗑` removes a contact (ASCII has no trash character;
+  the wastebasket glyph is the text equivalent). No `>`, `->`, `||`, `→`,
+  `Fwd` or `Bin` labels — the user rejected those. Theme colours only: orange
+  accent `#C64309`, soft-orange secondary, 38dp targets + content descriptions.
+  Live's start/stop use the same buttons as People, never full-width buttons.
+  Every card's children are strictly **title → subtitle → content**: SHOW QR
+  is "SHOW QR / to receive OTPs / QR", SCAN QR is "SCAN QR / to forward OTPs /
   camera". The camera glyph must never render above the title.
 
 ## UI principles (learned from user — apply to all future designs)
@@ -190,8 +193,8 @@ These are essential, not preferences. Apply without being asked again:
 - **Show the thing, don't hide it behind a tap.** If a feature is a QR, show
   the QR. If it opens the camera, show a camera icon. A label-only tile adds
   drop-off.
-- **One row per item.** Lists use compact ASCII word actions (`Pause`, `On`,
-  `Fwd`, `Bin`), never stacked full-width buttons.
+- **One row per item.** Lists use single compact glyphs (`⏸`, `▶`, `🗑`),
+  never words or stacked full-width buttons.
 - **Controls belong where the object is.** Put primary controls inline with
   the list row or section. Do not hide them in a popup or a distant tab.
 - **Popups are for confirmation and detail, not primary actions.** Keep the
@@ -199,9 +202,10 @@ These are essential, not preferences. Apply without being asked again:
 - **Separate secondary/test tools with a divider** so they don't compete
   with primary content.
 - **Small actions need 38–48dp touch targets and content descriptions.**
-  Use plain ASCII words only — no symbol icons, no emoji. Theme colours only.
-- **Same control everywhere.** A pause/turn-on action looks identical on Live
-  and People; do not give Live a big button and People a small one.
+  Use single icon glyphs, never words. `▶` means start/resume/forward; `⏸`
+  means stop; `🗑` means remove. No `>` or `->` substitutes. Theme colours only.
+- **Same control everywhere.** Start/stop actions look identical on Live and
+  People; do not give Live a big button and People a small one.
 - **Card child order is fixed:** title, subtitle, then content/affordance.
   Never put an icon before the title. Do not vertically centre a card.
 - Explanations stay behind an inline `ⓘ` on the header line, 5–7 words

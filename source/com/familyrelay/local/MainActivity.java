@@ -182,14 +182,14 @@ extends Activity {
         return button;
     }
 
-    /** Compact text action: plain ASCII label, theme colours, 38dp target. */
-    private TextView actionButton(String label, String description, boolean primary, int topMargin, Runnable action) {
-        TextView view = this.text(label, 12, primary ? -1 : ORANGE, true);
+    /** Compact icon action: single glyph, theme colours, 38dp target. */
+    private TextView actionButton(String glyph, String description, boolean primary, int topMargin, Runnable action) {
+        TextView view = this.text(glyph, 20, primary ? -1 : ORANGE, true);
         view.setGravity(17);
-        view.setPadding(this.dp(8), this.dp(4), this.dp(8), this.dp(4));
+        view.setPadding(this.dp(4), this.dp(4), this.dp(4), this.dp(4));
         view.setBackground((Drawable)this.background(primary ? ORANGE : SOFT_ORANGE, 12));
         view.setContentDescription((CharSequence)description);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-2, this.dp(38));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(this.dp(38), this.dp(38));
         params.setMargins(0, topMargin, 0, 0);
         view.setLayoutParams((ViewGroup.LayoutParams)params);
         view.setOnClickListener(v -> {
@@ -314,7 +314,7 @@ extends Activity {
         if (this.store.enabled() && recipient != null) {
             status.addView((View)this.text("To " + recipient.name, 17, INK, true));
             status.addView((View)this.text(recipient.phone, 13, MUTED, false));
-            status.addView((View)this.actionButton("Pause", "Pause forwarding", false, this.dp(8), () -> {
+            status.addView((View)this.actionButton("\u23F8", "Pause forwarding", false, this.dp(8), () -> {
                 this.store.setEnabled(false);
                 RelayNotifications.refresh((Context)this);
                 this.render();
@@ -338,7 +338,7 @@ extends Activity {
         } else {
             status.addView((View)this.text("To " + recipient.name, 17, INK, true));
             status.addView((View)this.text(recipient.phone, 13, MUTED, false));
-            status.addView((View)this.actionButton("On", "Turn on forwarding", true, this.dp(8), this::requestEnable));
+            status.addView((View)this.actionButton("\u25B6", "Turn on forwarding", true, this.dp(8), this::requestEnable));
         }
         this.activity();
     }
@@ -432,16 +432,16 @@ extends Activity {
             actions.setGravity(16);
             if (selected) {
                 if (this.store.enabled()) {
-                    actions.addView((View)this.actionButton("Pause", "Pause forwarding", false, 0, () -> {
+                    actions.addView((View)this.actionButton("\u23F8", "Pause forwarding", false, 0, () -> {
                         this.store.setEnabled(false);
                         RelayNotifications.refresh((Context)this);
                         this.render();
                     }));
                 } else {
-                    actions.addView((View)this.actionButton("On", "Turn on forwarding", true, 0, this::requestEnable));
+                    actions.addView((View)this.actionButton("\u25B6", "Turn on forwarding", true, 0, this::requestEnable));
                 }
             } else {
-                actions.addView((View)this.actionButton("Fwd", "Forward to this person", false, 0, () -> {
+                actions.addView((View)this.actionButton("\u25B6", "Forward to this person", false, 0, () -> {
                     this.store.select(contact.phone);
                     RelayNotifications.refresh((Context)this);
                     if (!this.store.enabled()) {
@@ -451,9 +451,9 @@ extends Activity {
                     }
                 }));
             }
-            LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(-2, this.dp(38));
+            LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(this.dp(38), this.dp(38));
             removeParams.setMargins(this.dp(6), 0, 0, 0);
-            actions.addView((View)this.actionButton("Bin", "Remove " + contact.name, false, 0, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
+            actions.addView((View)this.actionButton("\uD83D\uDDD1", "Remove " + contact.name, false, 0, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
                 this.store.removeContact(contact.phone);
                 RelayNotifications.refresh((Context)this);
                 this.render();

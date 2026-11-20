@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.7 (`versionCode=12`)** — source of truth is the `VERSION`
+- Version: **1.2.8 (`versionCode=13`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.7`, `versionCode=12`.
+- `VERSION` is the source of truth: `versionName=1.2.8`, `versionCode=13`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -147,6 +147,16 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   contextual button advances the flow, and `requestEnable()` requests receive,
   send and notification permissions together. Forwarding settings lives in
   the People tab, not as a third Live button.
+- **D12 People-first onboarding (1.2.8+):** Cold start opens **People** until
+  at least one contact is registered, then Live becomes the default from the
+  next load. The old big page titles are gone; cards carry their own headers.
+  People's top row is two directional cards: **SHOW QR / to receive OTPs**
+  (others scan yours and forward to you) and **SCAN QR / to forward OTPs**
+  (you add them and send them your codes). The tall inline QR preview is
+  removed; "Edit details" moved into the QR dialog. Each registered person
+  row owns its forwarding action: "Forward here" switches recipient in one
+  tap, while the selected row shows "Turn on forwarding" / "Pause
+  forwarding". First enable still runs permissions + versioned consent.
 
 ## Distribution constraints (checked 2026-11-20)
 

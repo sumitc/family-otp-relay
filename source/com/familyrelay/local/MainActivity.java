@@ -88,6 +88,8 @@ extends Activity {
         this.store = new RelayStore((Context)this);
         if (state != null) {
             this.tab = "People".equals(state.getString("tab")) ? "People" : "Live";
+        } else {
+            this.tab = this.store.contacts().isEmpty() ? "People" : "Live";
         }
         this.render();
     }
@@ -180,6 +182,19 @@ extends Activity {
         return button;
     }
 
+    /** Compact side-by-side action used at the top of People. */
+    private LinearLayout choiceCard(String title, String subtitle, Runnable action) {
+        LinearLayout card = this.column();
+        card.setPadding(this.dp(12), this.dp(14), this.dp(12), this.dp(14));
+        card.setBackground((Drawable)this.background(-1, 20));
+        card.addView((View)this.text(title, 16, INK, true));
+        TextView sub = this.text(subtitle, 11, MUTED, false);
+        sub.setPadding(0, 0, 0, 0);
+        card.addView((View)sub);
+        card.setOnClickListener(v -> action.run());
+        return card;
+    }
+
     /** Small inline info icon with a comfortable touch target. */
     private TextView infoIcon(String explanation) {
         TextView view = this.text("\u24d8", 13, MUTED, false);
@@ -241,7 +256,6 @@ extends Activity {
         root.addView((View)scroll, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, 0, 1.0f));
         TextView brand = this.text("IMPROM   /   ALWAYS LOCAL", 11, ORANGE, true);
         this.content.addView((View)brand);
-        this.content.addView((View)this.text("People".equals(this.tab) ? "Your trusted circle." : "Live activity", 26, INK, true));
         if ("People".equals(this.tab)) {
             this.people();
         } else {
@@ -336,37 +350,32 @@ extends Activity {
 
     private void people() {
         ContactCard me = this.store.profile();
-        LinearLayout profile = this.card();
-        profile.addView((View)this.infoRow("YOUR CONTACT QR", 12, ORANGE, "Confirm the number in person."));
-        profile.addView((View)this.text(me == null ? "Not set up" : me.name, 23, INK, true));
-        if (me == null) {
-            profile.addView((View)this.text(this.profileStatus, 14, MUTED, false));
-        profile.addView((View)this.button("Generate my QR", true, this::requestAutomaticProfile));
-        profile.addView((View)this.button("Enter number", false, this::editProfile));
-        } else {
-            profile.addView((View)this.text(me.phone, 16, INK, true));
-            profile.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(180)));
-            LinearLayout links = new LinearLayout((Context)this);
-            Button enlarge = this.button("Enlarge QR", false, this::showQr);
-            Button edit = this.button("Edit details", false, this::editProfile);
-            LinearLayout.LayoutParams left = new LinearLayout.LayoutParams(0, this.dp(48), 1.0f);
-            left.setMargins(0, this.dp(8), this.dp(6), 0);
-            LinearLayout.LayoutParams right = new LinearLayout.LayoutParams(0, this.dp(48), 1.0f);
-            right.setMargins(this.dp(6), this.dp(8), 0, 0);
-            links.addView((View)enlarge, (ViewGroup.LayoutParams)left);
-            links.addView((View)edit, (ViewGroup.LayoutParams)right);
-            profile.addView((View)links);
-        }
-        LinearLayout actions = this.card();
-        actions.addView((View)this.infoRow("ADD SOMEONE", 19, INK, "Scan, then authorize to register."));
-        actions.addView((View)this.button("Scan contact QR", true, () -> {
-            if (this.store.profile() == null) {
-                this.showError("Create your own contact QR first.");
+        LinearLayout choices = new LinearLayout((Context)this);
+        choices.setOrientation(0);
+        LinearLayout.LayoutParams showParams = new LinearLayout.LayoutParams(0, -2, 1.0f);
+        showParams.setMargins(0, this.dp(8), this.dp(4), 0);
+        LinearLayout.LayoutParams scanParams = new LinearLayout.LayoutParams(0, -2, 1.0f);
+        scanParams.setMargins(this.dp(4), this.dp(8), 0, 0);
+        choices.addView((View)this.choiceCard("SHOW QR", "to receive OTPs", () -> {
+            if (me == null) {
+                this.requestAutomaticProfile();
+                this.render();
+            } else {
+                this.showQr();
+            }
+        }), (ViewGroup.LayoutParams)showParams);
+        choices.addView((View)this.choiceCard("SCAN QR", "to forward OTPs", () -> {
+            if (me == null) {
+                this.showError("Create your QR first.");
             } else {
                 this.startActivityForResult(new Intent((Context)this, ScanActivity.class), 20);
             }
-        }));
-        actions.addView((View)this.button("Paste QR text", false, this::pasteQr));
+        }), (ViewGroup.LayoutParams)scanParams);
+        this.content.addView((View)choices);
+        if (me == null) {
+            this.content.addView((View)this.text(this.profileStatus, 13, MUTED, false));
+            this.content.addView((View)this.button("Enter number instead", false, this::editProfile));
+        }
         this.registeredPeople();
     }
 
@@ -380,15 +389,27 @@ extends Activity {
         for (ContactCard contact : this.store.contacts()) {
             LinearLayout person = this.card();
             boolean selected = contact.phone.equals(this.store.selectedPhone());
-            if (selected) {
-                person.addView((View)this.text("YOUR FORWARDING RECIPIENT", 11, ORANGE, true));
-            }
             person.addView((View)this.text(contact.name, 20, INK, true));
             person.addView((View)this.text(contact.phone, 14, MUTED, false));
-            if (!selected) {
-                person.addView((View)this.button("Use for forwarding", true, () -> {
+            if (selected) {
+                if (this.store.enabled()) {
+                    person.addView((View)this.button("Pause forwarding", false, () -> {
+                        this.store.setEnabled(false);
+                        RelayNotifications.refresh((Context)this);
+                        this.render();
+                    }));
+                } else {
+                    person.addView((View)this.button("Turn on forwarding", true, this::requestEnable));
+                }
+            } else {
+                person.addView((View)this.button("Forward here", false, () -> {
                     this.store.select(contact.phone);
-                    this.render();
+                    RelayNotifications.refresh((Context)this);
+                    if (!this.store.enabled()) {
+                        this.requestEnable();
+                    } else {
+                        this.render();
+                    }
                 }));
             }
             person.addView((View)this.button("Remove", false, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
@@ -519,6 +540,7 @@ extends Activity {
             LinearLayout layout = this.dialogLayout();
             layout.addView((View)this.infoRow(me.name + "\n" + me.phone, 16, INK, "Share only with people you trust."));
             layout.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(260)));
+            layout.addView((View)this.button("Edit details", false, this::editProfile));
             UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"My contact QR").setView((View)layout).setPositiveButton((CharSequence)"Done", null).create());
         }
     }

@@ -2,7 +2,7 @@
 
 On-device Android relay for OTP SMS. Branded **Improm** in the app.
 
-**Status:** build artifacts only — no source in this repo.
+**Status:** 1.2.3 (code 8). Crisp UI rebuilt from recovered sources.
 
 ## What it does
 
@@ -18,9 +18,11 @@ On-device Android relay for OTP SMS. Branded **Improm** in the app.
 
 ## Screens
 
-- **Live** — OTP events with send or skip status.
-- **People** — your QR, registered contacts, selected recipient.
-- **Forwarding settings** — on/off, allowed senders, SIM choice.
+- **Live** — one-tap on/off, recipient, OTP events.
+- **People** — your QR, contacts, one-tap recipient pick.
+- **Forwarding settings** — rules, SIM, offline test.
+
+Long explanations sit behind small **(i)** buttons. Each is 5–7 words.
 
 ## Before you enable
 
@@ -43,20 +45,21 @@ a QR is not proof of phone ownership.
 <summary><strong>What is in this repo</strong></summary>
 
 This repo came from `FamilyRelay.zip` in `widget-playground-v3`.
-The archive had compiled output only, so the tracked files are docs:
+The archive had compiled output only. Sources were recovered by decompiling
+the release classes and are now tracked:
 
-- `.gitignore` — ignores `.gradle/` and `**/build/`.
+- `source/` — decompiled Java, with the crisp UI changes.
+- `scripts/build-apk.sh` — compiles, dexes, patches version, signs.
 - `.opencode/skills/family-otp-relay/SKILL.md` — project brain.
-- `scripts/` — mobile-page build and checks.
 
-Build caches and DEX/class files remain local and untracked.
+Build caches and the signed APK remain local and untracked.
 
 </details>
 
 <details>
 <summary><strong>App facts from the artifacts</strong></summary>
 
-- Package `com.familyrelay.local`, version 1.2.1, min SDK 26, target 35.
+- Package `com.familyrelay.local`, archive was 1.2.1, min SDK 26, target 35.
 - Components: `MainActivity`, `ScanActivity`, `SmsReceiver`,
   `SendResultReceiver`, `ControlReceiver`.
 - Detection: offline regex, 4–8 digit codes, money messages excluded.
@@ -68,9 +71,9 @@ See the project brain skill for the full architecture and flows.
 
 ## APK
 
-- Version 1.2.2 (code 7), from `VERSION`.
-- Local build: `dist/family-otp-relay-1.2.2.apk`.
-- Rebuild: `bash scripts/build-apk.sh`.
+- Version 1.2.3 (code 8), from `VERSION`.
+- Local build: `dist/Improm-1.2.3.apk`.
+- Rebuild: `npm run apk` (needs Android SDK + JDK 17).
 - Bump the version on every change; Play Store needs a new code each upload.
 - Signed with a new local key, so uninstall an existing install first.
 

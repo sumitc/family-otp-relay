@@ -16,17 +16,16 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.2 (`versionCode=7`)** — source of truth is the `VERSION`
+- Version: **1.2.3 (`versionCode=8`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
 ## Ground rules
 
-- Do not claim the app can be built here — there is no `build.gradle`, no
-  `settings.gradle`, no `gradlew`, and no `src/`. Only build outputs exist.
-- The included `.gitignore` ignores `.gradle/` and `**/build/`, so the git
-  history contains only `.gitignore` plus this skill/docs. Build artifacts
-  stay local; never force-add them to the public repo.
+- No Gradle project exists. The app is rebuilt from `source/` (Java recovered
+  by decompiling the archive's release classes) with `javac` + `d8`.
+- The included `.gitignore` keeps `.gradle/`, `**/build/`, `dist/` and
+  `.android-tools/` local. Never force-add build artifacts or the APK.
 - Anything stated about behavior must be traceable to the manifest, resources,
   or bytecode. Mark inference as inference.
 - **Every update bumps the version.** No commit changes shipped behavior,
@@ -37,8 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth in this source-less repo:
-  `versionName=1.2.2`, `versionCode=7`.
+- `VERSION` is the source of truth: `versionName=1.2.3`, `versionCode=8`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -48,8 +46,10 @@ already used, even if `versionName` changed.
   a `versionName` whose UTF-16 byte length changed (the binary string pool
   cannot be resized safely). For a different-length name, regenerate the
   manifest from real sources with aapt2/Gradle.
-- `scripts/build-apk.sh` patches the binary manifest from `VERSION` on every
-  build, so repeated builds never double-increment.
+- `scripts/build-apk.sh` compiles `source/`, dexes it, patches the binary
+  manifest from `VERSION`, and signs. Repeated builds never double-increment.
+- Output is `dist/Improm-<versionName>.apk` — the **app brand is Improm**, even
+  though the repo is `family-otp-relay`. Keep the APK name branded Improm.
 - If real Gradle sources are restored, put the bump in `build.gradle` and keep
   `VERSION` identical. Mention the new version in the commit message.
 
@@ -136,6 +136,9 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
 - **D8 Screen privacy:** secure flag + overlay/touch protection.
 - **D9 Design tokens:** accent `#C64309`, background/status bars `#FFF8F1`,
   sans font, light status bar, RTL supported, no backup, cleartext blocked.
+- **D10 Crisp UI (1.2.3+):** Live and People are short — bold headers and
+  buttons only. Prose lives behind a small `(i)` trigger whose explanation is
+  at most 5–7 words. Critical consent dialogs stay explicit but condensed.
 
 ## Mobile-first page rules (learned — apply to docs in this repo)
 
@@ -161,20 +164,22 @@ npm run build   # renders dist/index.html from README.md
 npm test        # enforces the mobile-first rules above
 ```
 
-### APK reconstruction (no Gradle source)
+### APK build (no Gradle project)
 
-An installable APK can still be rebuilt from the compiled artifacts:
+`npm run apk` rebuilds the app from source. Steps in `scripts/build-apk.sh`:
 
-- `linked-resources-binary-format/release/.../linked-resources-binary-format-release.ap_`
-  contains the binary `AndroidManifest.xml`, `resources.arsc` and `res/`.
-- `dex/release/mergeDexRelease/classes.dex` is the merged release DEX
-  (app classes + ZXing QR scanner). No extra library DEX is needed.
+- `source/` holds Java recovered by decompiling the archive's release classes
+  with CFR. `MainActivity.java` carries the crisp-UI rewrite.
+- Compile with `javac --release 17` against `android.jar` + ZXing core 3.5.3,
+  then produce `classes.dex` with `d8 --min-api 26`. Tooling comes from the
+  local Android SDK (`~/Android/Sdk`) or a cached download in `.android-tools/`.
+- The archive's `linked-resources-binary-format-release.ap_` supplies the
+  binary `AndroidManifest.xml`, `resources.arsc` and `res/`.
 - `scripts/patch-manifest.py` rewrites the binary manifest's version fields
   from `VERSION` before packaging.
-- `scripts/build-apk.sh` assembles those with `zip` (storing `resources.arsc`
-  and `classes.dex`), then aligns and signs with uber-apk-signer 1.3.0 using
-  APK Signature Scheme v2 + v3, verifies, and writes
-  `dist/family-otp-relay-<versionName>.apk`.
+- Resources + DEX are zipped (stored), then aligned and signed with
+  uber-apk-signer 1.3.0 (APK Signature Scheme v2 + v3) and verified. Output:
+  `dist/Improm-<versionName>.apk`.
 - Signer download is checksum-pinned to
   `e1299fd6fcf4da527dd53735b56127e8ea922a321128123b9c32d619bba1d835`.
 - The keystore lives at `signing/family-relay.jks` (gitignored); password comes
@@ -196,6 +201,8 @@ javap -classpath "$CP" -p -c -constants com.familyrelay.local.SmsReceiver
 
 - Repo name says "family OTP relay" but the app's own UI says **Improm** and
   its relay prefix is `[Family Relay]`. Do not silently rename one to match.
+  The signed APK is deliberately named `Improm-<version>.apk`, not
+  `family-otp-relay-*.apk`.
 - The archive is version 1.2.1 but has no VCS metadata; `versionCode=6`.
 - `.gitignore` hides all artifacts, so `git status` looks empty even though
   ~16 MB of build output sits on disk. That is intentional.

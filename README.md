@@ -2,7 +2,7 @@
 
 On-device Android relay for OTP SMS. Branded **Improm** in the app.
 
-**Status:** 1.2.4 (code 9). Inline `ⓘ` icons, tighter mobile layout.
+**Status:** 1.2.5 (code 10). Guided one-step setup, simpler Live screen.
 
 ## What it does
 
@@ -18,8 +18,8 @@ On-device Android relay for OTP SMS. Branded **Improm** in the app.
 
 ## Screens
 
-- **Live** — one-tap on/off, recipient, OTP events.
-- **People** — your QR, contacts, one-tap recipient pick.
+- **Live** — one next step, then pause / turn on. No toggles to decode.
+- **People** — QR, contacts, recipient pick, and forwarding settings.
 - **Forwarding settings** — rules, SIM, offline test.
 
 Explanations sit behind a small **ⓘ** on the header's line, 5–7 words each.
@@ -72,8 +72,8 @@ See the project brain skill for the full architecture and flows.
 
 ## APK
 
-- Version 1.2.4 (code 9), from `VERSION`.
-- Local build: `dist/Improm-1.2.4.apk`.
+- Version 1.2.5 (code 10), from `VERSION`.
+- Local build: `dist/Improm-1.2.5.apk`.
 - Rebuild: `npm run apk` (needs Android SDK + JDK 17).
 - Bump the version on every change; Play Store needs a new code each upload.
 - Signed with a new local key, so uninstall an existing install first.

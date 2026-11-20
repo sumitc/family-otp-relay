@@ -272,40 +272,42 @@ extends Activity {
 
     private void live() {
         ContactCard recipient = this.store.recipient();
+        boolean ready = this.store.profile() != null && recipient != null;
         LinearLayout status = this.card();
         status.setBackground((Drawable)this.background(SOFT_ORANGE, 24));
-        status.addView((View)this.infoRow(this.store.enabled() ? "FORWARDING ON" : "PAUSED", 12, ORANGE, "New OTPs only. One person. Pause anytime."));
-        status.addView((View)this.text(recipient == null ? "Choose your person" : recipient.name, 25, INK, true));
-        if (recipient != null) status.addView((View)this.text(recipient.phone, 14, MUTED, false));
-        Switch toggle = new Switch((Context)this);
-        toggle.setText((CharSequence)"Auto-forward OTPs");
-        toggle.setTextSize(15.0f);
-        toggle.setTextColor(INK);
-        toggle.setPadding(0, this.dp(10), 0, this.dp(6));
-        toggle.setChecked(this.store.enabled());
-        toggle.setOnCheckedChangeListener((view, checked) -> {
-            if (checked) {
-                view.setChecked(false);
-                this.requestEnable();
-            } else if (this.store.enabled()) {
+        status.addView((View)this.infoRow(
+            this.store.enabled() ? "FORWARDING ON" : "FORWARDING PAUSED",
+            12, ORANGE, "New OTPs only. One person. Pause anytime."));
+
+        if (this.store.enabled() && recipient != null) {
+            status.addView((View)this.text("To " + recipient.name, 17, INK, true));
+            status.addView((View)this.text(recipient.phone, 13, MUTED, false));
+            status.addView((View)this.button("Pause forwarding", false, () -> {
                 this.store.setEnabled(false);
                 RelayNotifications.refresh((Context)this);
                 this.render();
-            }
-        });
-        status.addView((View)toggle);
-        if (this.checkSelfPermission("android.permission.RECEIVE_SMS") != 0) {
-            status.addView((View)this.button("Enable SMS detection", false, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Enable SMS detection?").setMessage((CharSequence)"Check new SMS for OTPs locally.").setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Allow detection", (dialog, which) -> this.requestPermissions(new String[]{"android.permission.RECEIVE_SMS"}, 30)).create())));
-        } else {
-            status.addView((View)this.text("SMS detection ready", 12, ORANGE, true));
-        }
-        if (this.store.profile() == null || recipient == null) {
-            status.addView((View)this.button("Set up People & QR", true, () -> {
-                this.tab = "People";
-                this.render();
             }));
+        } else if (!ready) {
+            if (this.store.profile() == null) {
+                status.addView((View)this.text("Next: create your QR", 16, INK, true));
+                status.addView((View)this.button("Create my QR", true, () -> {
+                    this.requestAutomaticProfile();
+                    this.render();
+                }));
+                if (this.automaticProfileAttempted) {
+                    status.addView((View)this.button("Enter number instead", false, this::editProfile));
+                }
+            } else {
+                status.addView((View)this.text("Next: add a contact", 16, INK, true));
+                status.addView((View)this.button("Scan contact QR", true, () ->
+                    this.startActivityForResult(new Intent((Context)this, ScanActivity.class), 20)));
+                status.addView((View)this.button("Paste QR text", false, this::pasteQr));
+            }
+        } else {
+            status.addView((View)this.text("To " + recipient.name, 17, INK, true));
+            status.addView((View)this.text(recipient.phone, 13, MUTED, false));
+            status.addView((View)this.button("Turn on forwarding", true, this::requestEnable));
         }
-        status.addView((View)this.button("Forwarding settings", false, this::forwardingSettings));
         this.activity();
     }
 
@@ -394,6 +396,7 @@ extends Activity {
                 this.render();
             }).create())));
         }
+        this.content.addView((View)this.button("Forwarding settings", false, this::forwardingSettings));
     }
 
     private void activity() {
@@ -628,7 +631,7 @@ extends Activity {
     private void requestEnable() {
         ContactCard recipient = this.store.recipient();
         if (this.store.profile() == null || recipient == null) {
-            this.showError("Set up People first: profile, QR, recipient.");
+            this.showError("Finish setup in People first.");
             return;
         }
         if (!this.getPackageManager().hasSystemFeature("android.hardware.telephony")) {

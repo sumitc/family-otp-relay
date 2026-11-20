@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.4 (`versionCode=9`)** — source of truth is the `VERSION`
+- Version: **1.2.5 (`versionCode=10`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.4`, `versionCode=9`.
+- `VERSION` is the source of truth: `versionName=1.2.5`, `versionCode=10`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -141,6 +141,12 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   line as its header**, never on its own row. Each explanation is 5–7 words.
   Card/button/text padding is tightened for small screens. Critical consent
   dialogs stay explicit but condensed.
+- **D11 Guided setup (1.2.5+):** Live shows exactly one next action — create
+  QR → add contact (auto-selected as recipient) → turn on forwarding. There
+  is no standalone toggle or separate SMS-detection button: the single
+  contextual button advances the flow, and `requestEnable()` requests receive,
+  send and notification permissions together. Forwarding settings lives in
+  the People tab, not as a third Live button.
 
 ## Mobile-first page rules (learned — apply to docs in this repo)
 

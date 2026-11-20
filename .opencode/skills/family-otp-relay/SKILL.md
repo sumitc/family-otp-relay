@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.6 (`versionCode=11`)** — source of truth is the `VERSION`
+- Version: **1.2.7 (`versionCode=12`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.6`, `versionCode=11`.
+- `VERSION` is the source of truth: `versionName=1.2.7`, `versionCode=12`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -147,6 +147,35 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   contextual button advances the flow, and `requestEnable()` requests receive,
   send and notification permissions together. Forwarding settings lives in
   the People tab, not as a third Live button.
+
+## Distribution constraints (checked 2026-11-20)
+
+**Restricted settings are a sideload-only artifact.** Android 13+ marks apps
+from a non-trusted installer (sideload, ADB, "Install unknown apps") as
+restricted. Sensitive permissions — SMS, notifications, accessibility, VPN,
+device admin — need App info → ⋮ → **Allow restricted settings** first.
+Play Store (`com.android.vending`) is a trusted installer, so this gate does
+not apply there. Play still does not auto-grant: users tap Allow for SMS and
+`POST_NOTIFICATIONS` (33+) and can block a channel.
+
+**Play's SMS policy is the real blocker.** `RECEIVE_SMS` / `SEND_SMS` are
+restricted. Current policy requires an **actively registered default SMS,
+Phone or Assistant handler**; apps without that capability may not declare
+the permissions in the manifest at all, even as placeholders. Improm is a
+relay, not a default SMS app, so it does not qualify on a strict reading.
+
+- Exception path: Permissions Declaration Form + **video demo** + extended
+  review (weeks). Rejection or removal is a real possibility.
+- Also required: privacy policy, Play description documenting the core SMS
+  feature, Data Safety declaration for "messages".
+- SMS Retriever / SMS User Consent cover **self-verification**, not relaying
+  another person's OTP — no drop-in replacement for our use case.
+- Policy tightens further on **2027-01-27**.
+
+**Recommendation:** direct APK distribution (or a private F-Droid-style repo)
+fits this permission model better for family use. If Play is mandatory,
+either rework Improm as a genuine default SMS handler or reduce permissions
+before investing in a listing. Do not assume Play upload will "just work".
 
 ## Mobile-first page rules (learned — apply to docs in this repo)
 

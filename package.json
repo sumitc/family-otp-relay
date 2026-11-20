@@ -6,7 +6,9 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check:page": "node scripts/page-check.mjs",
-    "test": "npm run build && node scripts/test.mjs",
+    "check:ux": "python3 scripts/ux-check.py",
+    "check:mobile": "python3 scripts/mobile-check.py",
+    "test": "npm run build && node scripts/test.mjs && npm run check:ux && npm run check:mobile",
     "apk": "npm test && bash scripts/build-apk.sh",
     "verify": "npm run apk"
   }

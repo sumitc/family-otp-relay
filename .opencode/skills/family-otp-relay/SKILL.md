@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.3.1 (`versionCode=16`)** — source of truth is the `VERSION`
+- Version: **1.3.2 (`versionCode=17`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.3.1`, `versionCode=16`.
+- `VERSION` is the source of truth: `versionName=1.3.2`, `versionCode=17`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -59,7 +59,7 @@ Components declared in the merged manifest:
 
 | Component | Role |
 | --- | --- |
-| `MainActivity` | Launcher UI. Programmatic Android views (no XML layouts). Three tabs: **Live**, **People**, **Forwarding settings**. |
+| `MainActivity` | Launcher UI. Programmatic Android views (no XML layouts). Two tabs: **Live**, **People**. |
 | `ScanActivity` | Camera QR scanner (legacy `android.hardware.Camera`, `SurfaceView`, background `ExecutorService`). Falls back to pasting QR text. |
 | `SmsReceiver` | Listens to `SMS_RECEIVED`; detects OTPs and forwards. Uses `goAsync()`. |
 | `SendResultReceiver` | Receives SMS send callbacks (`familyrelay://sent/`), records carrier result. |
@@ -102,9 +102,9 @@ Telephony is a required feature. **There is no `INTERNET` permission.**
 3. **People.** Scan another phone's QR (camera or paste), review, then
    "Authorize contact" to register locally. Cannot register own number;
    max 50 contacts. Select exactly one recipient ("Use for forwarding").
-4. **Forwarding settings.** Master ON/PAUSED switch; optional allowed sender
-   IDs/numbers; SIM choice — "Use the SIM that received the OTP" or
-   "Use for forwarding" (Android default SMS SIM).
+4. **Forwarding controls.** Master ON/PAUSED action lives inline on Live and
+   on the selected People row. Rules, sender filter and SIM choice were
+   removed in 1.3.1 as confusing; there is no settings popup.
 5. **Live.** New OTP SMS appear with send/skip status. Ordinary SMS never
    appear. Skips are explicit: paused, unregistered sender, own number,
    recipient loop, sender not allowed, inconsistent SMS parts, >1,600 chars,
@@ -169,13 +169,19 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   "Others see this name on your QR." Users can always override it.
 - **D14 Dense controls, visible affordances (1.3.0+):** Each contact is one
   compact row with small actions (38dp targets + content descriptions).
-  1.3.1 uses plain text glyphs: `||` pause, `>` turn on, `->` forward, `🗑`
-  bin for remove — the Unicode symbol icons looked odd. There is **no**
-  forwarding-rules section: sender filter, SIM switch and privacy lines were
-  removed entirely as confusing; "Forwarding settings" and "Allowed senders"
-  popups are gone. A divider precedes "Try offline detector". SHOW QR renders
-  the QR inline; SCAN QR shows a camera glyph with its title top-aligned.
-  Tapping the QR enlarges it.
+  There is **no** forwarding-rules section: sender filter, SIM switch and
+  privacy lines were removed entirely as confusing; "Forwarding settings"
+  and "Allowed senders" popups are gone. A divider precedes
+  "Try offline detector". SHOW QR renders the QR inline; SCAN QR shows a
+  camera glyph. Tapping the QR enlarges it.
+- **D15 ASCII actions, fixed card order (1.3.2+):** All actions use the same
+  compact `actionButton` with **plain ASCII words**: `Pause`, `On`, `Fwd`,
+  `Bin`. No Unicode symbol icons and no emoji for actions; theme colours only
+  (orange accent `#C64309`, soft-orange secondary). Live's pause/turn-on use
+  the same compact buttons as People, never full-width buttons. Every card's
+  children are strictly **title → subtitle → content**: SHOW QR is
+  "SHOW QR / to receive OTPs / QR", SCAN QR is "SCAN QR / to forward OTPs /
+  camera". The camera glyph must never render above the title.
 
 ## UI principles (learned from user — apply to all future designs)
 
@@ -184,8 +190,8 @@ These are essential, not preferences. Apply without being asked again:
 - **Show the thing, don't hide it behind a tap.** If a feature is a QR, show
   the QR. If it opens the camera, show a camera icon. A label-only tile adds
   drop-off.
-- **One row per item.** Lists use compact icon actions, never stacked
-  full-width buttons for pause/remove.
+- **One row per item.** Lists use compact ASCII word actions (`Pause`, `On`,
+  `Fwd`, `Bin`), never stacked full-width buttons.
 - **Controls belong where the object is.** Put primary controls inline with
   the list row or section. Do not hide them in a popup or a distant tab.
 - **Popups are for confirmation and detail, not primary actions.** Keep the
@@ -193,9 +199,11 @@ These are essential, not preferences. Apply without being asked again:
 - **Separate secondary/test tools with a divider** so they don't compete
   with primary content.
 - **Small actions need 38–48dp touch targets and content descriptions.**
-  Prefer plain text glyphs (`||`, `>`, `->`) over unusual Unicode symbols.
-- **Align card titles to the top.** Do not vertically centre a card whose
-  label is a title; it reads as mid-page clutter.
+  Use plain ASCII words only — no symbol icons, no emoji. Theme colours only.
+- **Same control everywhere.** A pause/turn-on action looks identical on Live
+  and People; do not give Live a big button and People a small one.
+- **Card child order is fixed:** title, subtitle, then content/affordance.
+  Never put an icon before the title. Do not vertically centre a card.
 - Explanations stay behind an inline `ⓘ` on the header line, 5–7 words
   (D10). Never add a standalone explanation row.
 - **Never confirm a build without load checks.** `npm test` serves
@@ -252,13 +260,24 @@ Keep the GitHub README short enough to scan on a 360px phone:
 ## Verification
 
 ```bash
-npm run build   # renders dist/index.html from README.md
-npm test        # builds docs, enforces mobile rules, loads page over HTTP
-npm run apk     # runs tests, builds APK, verifies archive/manifest/DEX
+npm test        # docs build + mobile rules + HTTP load + UX suite + browser
+npm run apk     # all of the above, then build and verify the APK
+npm run check:ux       # 15 named cases: Live, People, dialogs, navigation
+npm run check:mobile   # 360px and 390px browser checks
 ```
 
-Never report a build as done unless `npm test` reported both PASS lines and
+Never report a build as done unless `npm test` printed:
+`PASS — ... mobile rules OK`, `PASS — docs page loads over HTTP`,
+`UX CHECK PASS — 15 cases`, `MOBILE CHECK PASS — 2 viewports`; and
 `npm run apk` printed `APK verified: ...` before `APK ready: ...`.
+
+`scripts/ux-check.py` locks the regressions that already happened: card child
+order (title → subtitle → content), ASCII-only actions, identical compact
+controls on both pages, no rules section, and dialog action buttons surviving
+typing (keyboard resize, validation listeners, no hiding/text watchers).
+`scripts/mobile-check.py` uses Playwright Chromium at phone widths to assert
+no horizontal scroll, readable text, details that toggle, and no JS errors.
+Run the whole suite after **every** change, not just before release.
 
 ### APK build (no Gradle project)
 
@@ -306,5 +325,6 @@ javap -classpath "$CP" -p -c -constants com.familyrelay.local.SmsReceiver
 - Enable failures are usually **notifications**, not SMS: `RelayNotifications.allowed()`
   also requires the `relay_status` channel to have non-zero importance. Since
   1.2.6 a blocked channel is re-created at DEFAULT importance, the permission
-  result names the exact blocker, and Forwarding settings shows live
-  `SMS: ready/missing • Alerts: ready/blocked`. Channel ID: `relay_status`.
+  result names the exact blocker. The old live
+  `SMS: ready/missing • Alerts: ready/blocked` readout was removed with the
+  rules section in 1.3.1. Channel ID: `relay_status`.

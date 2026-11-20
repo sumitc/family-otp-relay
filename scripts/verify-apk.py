@@ -62,6 +62,21 @@ def main():
     if len(dex) < 10000:
         errors.append(f'DEX suspiciously small: {len(dex)} bytes')
 
+    # Both app pages must survive compilation; removed UI must not come back.
+    for token in (
+        b'FORWARDING ON', b'FORWARDING PAUSED', b'SHOW QR', b'SCAN QR',
+        b'to receive OTPs', b'to forward OTPs', b'Try offline detector',
+        b'Review contact', b'Save QR', b'Check locally', b'My contact QR',
+    ):
+        if token not in dex:
+            errors.append(f'DEX missing UI text: {token.decode()}')
+    for stale in (
+        b'FORWARDING RULES', b'Forwarding settings',
+        b'Choose allowed senders', b'Forward here',
+    ):
+        if stale in dex:
+            errors.append(f'DEX contains removed UI text: {stale.decode()}')
+
     if errors:
         print('APK VERIFICATION FAILED:')
         for error in errors:

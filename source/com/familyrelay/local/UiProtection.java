@@ -10,6 +10,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 final class UiProtection {
@@ -46,7 +47,9 @@ final class UiProtection {
 
     static void show(AlertDialog dialog) {
         dialog.show();
-        UiProtection.protect(dialog.getWindow());
+        Window window = dialog.getWindow();
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        UiProtection.protect(window);
     }
 }
 

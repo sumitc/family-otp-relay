@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.3.4 (`versionCode=19`)** — source of truth is the `VERSION`
+- Version: **1.3.5 (`versionCode=20`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.3.4`, `versionCode=19`.
+- `VERSION` is the source of truth: `versionName=1.3.5`, `versionCode=20`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -181,10 +181,17 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   the wastebasket glyph is the text equivalent). No `>`, `->`, `||`, `→`,
   `Fwd` or `Bin` labels — the user rejected those. Theme colours only: orange
   accent `#C64309`, soft-orange secondary, 38dp targets + content descriptions.
-  Live's start/stop use the same buttons as People, never full-width buttons.
   Every card's children are strictly **title → subtitle → content**: SHOW QR
   is "SHOW QR / to receive OTPs / QR", SCAN QR is "SCAN QR / to forward OTPs /
   camera". The camera glyph must never render above the title.
+- **D16 One pause point, short Live header (1.3.5+):** Once a recipient is
+  registered, Live shows only `FORWARDING ON` / `FORWARDING PAUSED`, the
+  recipient name and an underlined blue **change setting** link **in the same
+  header row**. Tapping it switches to People. There is no pause/play control
+  on Live at all: all forwarding changes happen on the People row. Setup
+  buttons (Create my QR, Scan contact QR, Paste QR text) stay only while no
+  recipient exists. This keeps the Live header short and removes duplicate
+  pause points.
 
 ## UI principles (learned from user — apply to all future designs)
 
@@ -204,8 +211,11 @@ These are essential, not preferences. Apply without being asked again:
 - **Small actions need 38–48dp touch targets and content descriptions.**
   Use single icon glyphs, never words. `▶` means start/resume/forward; `⏸`
   means stop; `🗑` means remove. No `>` or `->` substitutes. Theme colours only.
-- **Same control everywhere.** Start/stop actions look identical on Live and
-  People; do not give Live a big button and People a small one.
+- **One control point.** Do not duplicate pause/play on Live and People. Keep
+  the action on the People row; Live only reports state and links there.
+- **Keep status headers short and inline.** A secondary action such as
+  "change setting" belongs in the header row as an underlined blue link,
+  never on its own line below the state text.
 - **Card child order is fixed:** title, subtitle, then content/affordance.
   Never put an icon before the title. Do not vertically centre a card.
 - Explanations stay behind an inline `ⓘ` on the header line, 5–7 words

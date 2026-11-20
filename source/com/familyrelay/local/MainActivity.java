@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -56,6 +57,7 @@ extends Activity {
     private static final int SOFT_ORANGE = Color.rgb((int)255, (int)235, (int)219);
     private static final int INK = Color.rgb((int)43, (int)33, (int)27);
     private static final int MUTED = Color.rgb((int)114, (int)99, (int)88);
+    private static final int LINK_BLUE = Color.rgb((int)26, (int)115, (int)232);
     private static final int BACKGROUND = Color.rgb((int)255, (int)248, (int)241);
     private static final int SMS_PERMISSION_REQUEST = 10;
     private static final int SCAN_REQUEST = 20;
@@ -203,6 +205,15 @@ extends Activity {
         return view;
     }
 
+    /** Small underlined link used for in-row navigation. */
+    private TextView link(String label, Runnable action) {
+        TextView view = this.text(label, 12, LINK_BLUE, true);
+        view.setPaintFlags(view.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        view.setPadding(this.dp(4), this.dp(2), 0, this.dp(2));
+        view.setOnClickListener(v -> action.run());
+        return view;
+    }
+
     /** Thin separator before secondary and testing tools. */
     private View divider() {
         View line = new View((Context)this);
@@ -307,38 +318,37 @@ extends Activity {
         boolean ready = this.store.profile() != null && recipient != null;
         LinearLayout status = this.card();
         status.setBackground((Drawable)this.background(SOFT_ORANGE, 24));
-        status.addView((View)this.infoRow(
-            this.store.enabled() ? "FORWARDING ON" : "FORWARDING PAUSED",
-            12, ORANGE, "New OTPs only. One person. Pause anytime."));
+        LinearLayout heading = this.inlineInfo(
+            this.text(this.store.enabled() ? "FORWARDING ON" : "FORWARDING PAUSED", 12, ORANGE, true),
+            "New OTPs only. Manage in People.", true);
+        if (ready) {
+            TextView change = this.link("change setting", () -> {
+                this.tab = "People";
+                this.render();
+            });
+            LinearLayout.LayoutParams linkParams = new LinearLayout.LayoutParams(-2, -2);
+            linkParams.setMargins(this.dp(6), 0, 0, 0);
+            heading.addView((View)change, (ViewGroup.LayoutParams)linkParams);
+        }
+        status.addView((View)heading);
 
-        if (this.store.enabled() && recipient != null) {
+        if (ready) {
             status.addView((View)this.text("To " + recipient.name, 17, INK, true));
             status.addView((View)this.text(recipient.phone, 13, MUTED, false));
-            status.addView((View)this.actionButton("\u23F8", "Pause forwarding", false, this.dp(8), () -> {
-                this.store.setEnabled(false);
-                RelayNotifications.refresh((Context)this);
+        } else if (this.store.profile() == null) {
+            status.addView((View)this.text("Next: create your QR", 16, INK, true));
+            status.addView((View)this.button("Create my QR", true, () -> {
+                this.requestAutomaticProfile();
                 this.render();
             }));
-        } else if (!ready) {
-            if (this.store.profile() == null) {
-                status.addView((View)this.text("Next: create your QR", 16, INK, true));
-                status.addView((View)this.button("Create my QR", true, () -> {
-                    this.requestAutomaticProfile();
-                    this.render();
-                }));
-                if (this.automaticProfileAttempted) {
-                    status.addView((View)this.button("Enter number instead", false, this::editProfile));
-                }
-            } else {
-                status.addView((View)this.text("Next: add a contact", 16, INK, true));
-                status.addView((View)this.button("Scan contact QR", true, () ->
-                    this.startActivityForResult(new Intent((Context)this, ScanActivity.class), 20)));
-                status.addView((View)this.button("Paste QR text", false, this::pasteQr));
+            if (this.automaticProfileAttempted) {
+                status.addView((View)this.button("Enter number instead", false, this::editProfile));
             }
         } else {
-            status.addView((View)this.text("To " + recipient.name, 17, INK, true));
-            status.addView((View)this.text(recipient.phone, 13, MUTED, false));
-            status.addView((View)this.actionButton("\u25B6", "Turn on forwarding", true, this.dp(8), this::requestEnable));
+            status.addView((View)this.text("Next: add a contact", 16, INK, true));
+            status.addView((View)this.button("Scan contact QR", true, () ->
+                this.startActivityForResult(new Intent((Context)this, ScanActivity.class), 20)));
+            status.addView((View)this.button("Paste QR text", false, this::pasteQr));
         }
         this.activity();
     }

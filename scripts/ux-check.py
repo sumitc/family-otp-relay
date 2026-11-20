@@ -191,7 +191,7 @@ def live_single_next_action():
     primaries = re.findall(
         r'this\.(?:button|actionButton)\("([^"]+)",\s*(?:"[^"]*",\s*)?true,',
         body)
-    expected = ['Create my QR', 'Scan contact QR', '\\u25B6']
+    expected = ['Create my QR', 'Scan contact QR']
     if primaries != expected:
         errors.append(f'guided actions changed: {primaries} != {expected}')
     if 'new Switch(' in body or 'Forwarding settings' in body:
@@ -205,25 +205,35 @@ def live_single_next_action():
 def live_status_header():
     body = method(MAIN, 'live')
     errors = []
-    for token in ('"FORWARDING ON"', '"FORWARDING PAUSED"', 'this.infoRow(',
-                  '"To "'):
+    for token in ('"FORWARDING ON"', '"FORWARDING PAUSED"',
+                  'this.inlineInfo(', '"To "',
+                  '"New OTPs only. Manage in People."'):
         if token not in body:
             errors.append(f'status header lost {token}')
     return errors
 
 
-@case('live.compact_actions')
-def live_compact_actions():
+@case('live.inline_link')
+def live_inline_link():
     body = method(MAIN, 'live')
     errors = []
-    if 'this.actionButton("\\u23F8"' not in body:
-        errors.append('Live pause is not the compact People-style action')
-    if 'this.actionButton("\\u25B6"' not in body:
-        errors.append('Live resume is not the compact People-style action')
-    for stale in ('this.button("Pause forwarding"',
-                  'this.button("Turn on forwarding"'):
+    if 'this.link("change setting"' not in body:
+        errors.append('Live has no "change setting" link')
+    if 'this.tab = "People";' not in body:
+        errors.append('"change setting" does not open the People tab')
+    link_add = body.find('heading.addView((View)change')
+    heading_add = body.find('status.addView((View)heading)')
+    if link_add < 0 or heading_add < 0 or link_add > heading_add:
+        errors.append('link must be in the status header row, not below it')
+    for stale in ('this.actionButton(', 'this.button("Pause forwarding"',
+                  'this.button("Turn on forwarding"', '\\u23F8', '\\u25B6'):
         if stale in body:
-            errors.append(f'full-width Live button returned: {stale}')
+            errors.append(f'Live still has a second forwarding control: {stale}')
+    helper = method(MAIN, 'link')
+    if 'LINK_BLUE' not in helper or 'Paint.UNDERLINE_TEXT_FLAG' not in helper:
+        errors.append('link must use the blue underlined style')
+    if 'private static final int LINK_BLUE' not in MAIN:
+        errors.append('link colour is not defined')
     return errors
 
 

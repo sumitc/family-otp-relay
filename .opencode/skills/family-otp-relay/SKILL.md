@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.3 (`versionCode=8`)** — source of truth is the `VERSION`
+- Version: **1.2.4 (`versionCode=9`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.3`, `versionCode=8`.
+- `VERSION` is the source of truth: `versionName=1.2.4`, `versionCode=9`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -137,8 +137,10 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
 - **D9 Design tokens:** accent `#C64309`, background/status bars `#FFF8F1`,
   sans font, light status bar, RTL supported, no backup, cleartext blocked.
 - **D10 Crisp UI (1.2.3+):** Live and People are short — bold headers and
-  buttons only. Prose lives behind a small `(i)` trigger whose explanation is
-  at most 5–7 words. Critical consent dialogs stay explicit but condensed.
+  buttons only. Explanations sit behind a small inline `ⓘ` icon **on the same
+  line as its header**, never on its own row. Each explanation is 5–7 words.
+  Card/button/text padding is tightened for small screens. Critical consent
+  dialogs stay explicit but condensed.
 
 ## Mobile-first page rules (learned — apply to docs in this repo)
 

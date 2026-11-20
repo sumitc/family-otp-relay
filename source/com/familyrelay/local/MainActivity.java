@@ -131,7 +131,7 @@ extends Activity {
         if (bold) {
             view.setTypeface(Typeface.create((String)"sans-serif", (int)1));
         }
-        view.setPadding(0, this.dp(4), 0, this.dp(6));
+        view.setPadding(0, this.dp(2), 0, this.dp(4));
         return view;
     }
 
@@ -150,10 +150,10 @@ extends Activity {
 
     private LinearLayout card() {
         LinearLayout card = this.column();
-        card.setPadding(this.dp(20), this.dp(16), this.dp(20), this.dp(16));
+        card.setPadding(this.dp(16), this.dp(12), this.dp(16), this.dp(12));
         card.setBackground((Drawable)this.background(-1, 20));
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
-        params.setMargins(0, this.dp(12), 0, 0);
+        params.setMargins(0, this.dp(8), 0, 0);
         this.content.addView((View)card, (ViewGroup.LayoutParams)params);
         return card;
     }
@@ -166,8 +166,8 @@ extends Activity {
         button.setTextColor(primary ? -1 : ORANGE);
         button.setBackground((Drawable)this.background(primary ? ORANGE : SOFT_ORANGE, 16));
         button.setPadding(this.dp(14), this.dp(10), this.dp(14), this.dp(10));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, this.dp(52));
-        params.topMargin = this.dp(12);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, this.dp(46));
+        params.topMargin = this.dp(8);
         button.setLayoutParams((ViewGroup.LayoutParams)params);
         button.setOnClickListener(v -> {
             try {
@@ -180,16 +180,39 @@ extends Activity {
         return button;
     }
 
-    /** Compact info trigger: shows a short explanation on tap. */
-    private TextView info(String explanation) {
-        TextView view = this.text("(i)", 12, MUTED, true);
-        view.setPadding(this.dp(6), this.dp(2), this.dp(6), this.dp(2));
+    /** Small inline info icon with a comfortable touch target. */
+    private TextView infoIcon(String explanation) {
+        TextView view = this.text("\u24d8", 13, MUTED, false);
+        view.setPadding(this.dp(4), this.dp(2), this.dp(4), this.dp(2));
+        view.setContentDescription((CharSequence)"More info");
         view.setOnClickListener(v -> UiProtection.show(new AlertDialog.Builder((Context)this)
             .setTitle((CharSequence)"Info")
             .setMessage((CharSequence)explanation)
             .setPositiveButton((CharSequence)"Got it", null)
             .create()));
         return view;
+    }
+
+    /** Put content and an info icon on the same line. */
+    private LinearLayout inlineInfo(View content, String explanation, boolean stretch) {
+        LinearLayout row = new LinearLayout((Context)this);
+        row.setOrientation(0);
+        row.setGravity(16);
+        LinearLayout.LayoutParams cp = stretch
+            ? new LinearLayout.LayoutParams(0, -2, 1.0f)
+            : new LinearLayout.LayoutParams(-2, -2);
+        row.addView(content, (ViewGroup.LayoutParams)cp);
+        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(-2, -2);
+        ip.setMargins(this.dp(2), 0, 0, 0);
+        row.addView((View)this.infoIcon(explanation), (ViewGroup.LayoutParams)ip);
+        return row;
+    }
+
+    /** Bold header with an inline info icon. */
+    private LinearLayout infoRow(String title, int size, int color, String explanation) {
+        TextView label = this.text(title, size, color, true);
+        label.setPadding(0, this.dp(2), 0, this.dp(2));
+        return this.inlineInfo((View)label, explanation, true);
     }
 
     private void render() {
@@ -213,12 +236,12 @@ extends Activity {
         this.pageScroll = scroll = new ScrollView((Context)this);
         scroll.setFillViewport(true);
         this.content = this.column();
-        this.content.setPadding(this.dp(22), this.dp(18), this.dp(22), this.dp(28));
+        this.content.setPadding(this.dp(16), this.dp(12), this.dp(16), this.dp(20));
         scroll.addView((View)this.content);
         root.addView((View)scroll, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, 0, 1.0f));
         TextView brand = this.text("IMPROM   /   ALWAYS LOCAL", 11, ORANGE, true);
         this.content.addView((View)brand);
-        this.content.addView((View)this.text("People".equals(this.tab) ? "Your trusted circle." : "Live activity", 30, INK, true));
+        this.content.addView((View)this.text("People".equals(this.tab) ? "Your trusted circle." : "Live activity", 26, INK, true));
         if ("People".equals(this.tab)) {
             this.people();
         } else {
@@ -226,11 +249,11 @@ extends Activity {
         }
         LinearLayout navigation = new LinearLayout((Context)this);
         navigation.setBackgroundColor(-1);
-        navigation.setPadding(this.dp(12), this.dp(8), this.dp(12), this.dp(8));
+        navigation.setPadding(this.dp(8), this.dp(6), this.dp(8), this.dp(6));
         for (String name : new String[]{"Live", "People"}) {
             TextView item = this.text("Live".equals(name) ? "Live" : "People", 14, this.tab.equals(name) ? ORANGE : MUTED, this.tab.equals(name));
             item.setGravity(17);
-            item.setPadding(this.dp(8), this.dp(12), this.dp(8), this.dp(12));
+            item.setPadding(this.dp(6), this.dp(10), this.dp(6), this.dp(10));
             item.setBackground((Drawable)this.background(this.tab.equals(name) ? SOFT_ORANGE : -1, 16));
             item.setOnClickListener(v -> {
                 this.tab = name;
@@ -251,14 +274,14 @@ extends Activity {
         ContactCard recipient = this.store.recipient();
         LinearLayout status = this.card();
         status.setBackground((Drawable)this.background(SOFT_ORANGE, 24));
-        status.addView((View)this.text(this.store.enabled() ? "FORWARDING ON" : "PAUSED", 12, ORANGE, true));
+        status.addView((View)this.infoRow(this.store.enabled() ? "FORWARDING ON" : "PAUSED", 12, ORANGE, "New OTPs only. One person. Pause anytime."));
         status.addView((View)this.text(recipient == null ? "Choose your person" : recipient.name, 25, INK, true));
         if (recipient != null) status.addView((View)this.text(recipient.phone, 14, MUTED, false));
         Switch toggle = new Switch((Context)this);
         toggle.setText((CharSequence)"Auto-forward OTPs");
         toggle.setTextSize(15.0f);
         toggle.setTextColor(INK);
-        toggle.setPadding(0, this.dp(18), 0, this.dp(8));
+        toggle.setPadding(0, this.dp(10), 0, this.dp(6));
         toggle.setChecked(this.store.enabled());
         toggle.setOnCheckedChangeListener((view, checked) -> {
             if (checked) {
@@ -271,7 +294,6 @@ extends Activity {
             }
         });
         status.addView((View)toggle);
-        status.addView((View)this.info("New OTPs only. One person. Pause anytime."));
         if (this.checkSelfPermission("android.permission.RECEIVE_SMS") != 0) {
             status.addView((View)this.button("Enable SMS detection", false, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Enable SMS detection?").setMessage((CharSequence)"Check new SMS for OTPs locally.").setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Allow detection", (dialog, which) -> this.requestPermissions(new String[]{"android.permission.RECEIVE_SMS"}, 30)).create())));
         } else {
@@ -290,7 +312,7 @@ extends Activity {
     private void forwardingSettings() {
         LinearLayout rules = this.dialogLayout();
         rules.addView((View)this.text("SMS RULES", 12, ORANGE, true));
-        rules.addView((View)this.text(this.store.senderFilter().isEmpty() ? "Senders: all" : "Senders: " + this.store.senderFilter(), 14, MUTED, false));
+        rules.addView((View)this.inlineInfo(this.text(this.store.senderFilter().isEmpty() ? "Senders: all" : "Senders: " + this.store.senderFilter(), 14, MUTED, false), "All senders checked by default.", true));
         rules.addView((View)this.button("Choose allowed senders", false, this::editSenders));
         Switch sim = new Switch((Context)this);
         sim.setText((CharSequence)"Use receiving SIM");
@@ -299,11 +321,10 @@ extends Activity {
         sim.setPadding(0, this.dp(16), 0, this.dp(6));
         sim.setChecked(this.store.incomingSim());
         sim.setOnCheckedChangeListener((view, checked) -> this.store.setIncomingSim(checked));
-        rules.addView((View)sim);
-        rules.addView((View)this.info("Falls back to default SMS SIM."));
-        rules.addView((View)this.info("No internet. Detection runs on-device."));
-        rules.addView((View)this.info("Codes never saved. Carrier charges apply."));
-        rules.addView((View)this.info("One-way only. Recipient needs own setup."));
+        rules.addView((View)this.inlineInfo((View)sim, "Falls back to default SMS SIM.", false));
+        rules.addView((View)this.infoRow("PRIVACY", 13, INK, "No internet. Detection runs on-device."));
+        rules.addView((View)this.infoRow("COSTS", 13, INK, "Codes never saved. Carrier charges apply."));
+        rules.addView((View)this.infoRow("RELAY", 13, INK, "One-way only. Recipient needs own setup."));
         rules.addView((View)this.button("Try offline detector", false, this::testDetector));
         ScrollView scroll = new ScrollView((Context)this);
         scroll.addView((View)rules);
@@ -313,7 +334,7 @@ extends Activity {
     private void people() {
         ContactCard me = this.store.profile();
         LinearLayout profile = this.card();
-        profile.addView((View)this.text("YOUR CONTACT QR", 12, ORANGE, true));
+        profile.addView((View)this.infoRow("YOUR CONTACT QR", 12, ORANGE, "Confirm the number in person."));
         profile.addView((View)this.text(me == null ? "Not set up" : me.name, 23, INK, true));
         if (me == null) {
             profile.addView((View)this.text(this.profileStatus, 14, MUTED, false));
@@ -321,8 +342,7 @@ extends Activity {
         profile.addView((View)this.button("Enter number", false, this::editProfile));
         } else {
             profile.addView((View)this.text(me.phone, 16, INK, true));
-            profile.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(216)));
-            profile.addView((View)this.info("Confirm the number in person."));
+            profile.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(180)));
             LinearLayout links = new LinearLayout((Context)this);
             Button enlarge = this.button("Enlarge QR", false, this::showQr);
             Button edit = this.button("Edit details", false, this::editProfile);
@@ -335,8 +355,7 @@ extends Activity {
             profile.addView((View)links);
         }
         LinearLayout actions = this.card();
-        actions.addView((View)this.text("ADD SOMEONE", 19, INK, true));
-        actions.addView((View)this.info("Scan, then authorize to register."));
+        actions.addView((View)this.infoRow("ADD SOMEONE", 19, INK, "Scan, then authorize to register."));
         actions.addView((View)this.button("Scan contact QR", true, () -> {
             if (this.store.profile() == null) {
                 this.showError("Create your own contact QR first.");
@@ -350,7 +369,7 @@ extends Activity {
 
     private void registeredPeople() {
         TextView heading = this.text("Registered people  /  " + this.store.contacts().size(), 18, INK, true);
-        heading.setPadding(0, this.dp(24), 0, this.dp(4));
+        heading.setPadding(0, this.dp(14), 0, this.dp(4));
         this.content.addView((View)heading);
         if (this.store.contacts().isEmpty()) {
             this.content.addView((View)this.text("No contacts yet.", 14, MUTED, false));
@@ -378,15 +397,13 @@ extends Activity {
     }
 
     private void activity() {
-        TextView heading = this.text("OTP activity", 21, INK, true);
-        heading.setPadding(0, this.dp(24), 0, this.dp(4));
+        LinearLayout heading = this.infoRow("OTP activity", 21, INK, "OTPs only. Codes never saved.");
+        heading.setPadding(0, this.dp(14), 0, this.dp(4));
         this.content.addView((View)heading);
-        this.content.addView((View)this.info("OTPs only. Codes never saved."));
         JSONArray events = this.store.otpEvents();
         if (events.length() == 0) {
             LinearLayout empty = this.card();
-            empty.addView((View)this.text("All quiet for now.", 22, INK, true));
-            empty.addView((View)this.info("New OTPs will appear here."));
+            empty.addView((View)this.infoRow("All quiet for now.", 22, INK, "New OTPs will appear here."));
         }
         try {
             for (int i = 0; i < events.length(); ++i) {
@@ -447,7 +464,7 @@ extends Activity {
         }
         layout.addView((View)name);
         layout.addView((View)phone);
-        layout.addView((View)this.info("Your number is never uploaded."));
+        layout.addView((View)this.infoRow("PRIVATE", 13, MUTED, "Your number is never uploaded."));
         AlertDialog dialog = new AlertDialog.Builder((Context)this).setTitle((CharSequence)"QR details").setView((View)layout).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Save QR", null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(-1).setOnClickListener(v -> {
             try {
@@ -496,9 +513,8 @@ extends Activity {
         ContactCard me = this.store.profile();
         if (me != null) {
             LinearLayout layout = this.dialogLayout();
-            layout.addView((View)this.text(me.name + "\n" + me.phone, 16, INK, true));
-            layout.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(280)));
-            layout.addView((View)this.info("Share only with people you trust."));
+            layout.addView((View)this.infoRow(me.name + "\n" + me.phone, 16, INK, "Share only with people you trust."));
+            layout.addView((View)this.qrImage(me), (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(260)));
             UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"My contact QR").setView((View)layout).setPositiveButton((CharSequence)"Done", null).create());
         }
     }
@@ -583,8 +599,8 @@ extends Activity {
             return;
         }
         LinearLayout layout = this.dialogLayout();
-        layout.addView((View)this.info("Leave empty for all senders."));
-        layout.addView((View)this.info("Sender IDs can be spoofed."));
+        layout.addView((View)this.infoRow("ALL SENDERS", 13, MUTED, "Leave empty for all senders."));
+        layout.addView((View)this.infoRow("SPOOFING", 13, MUTED, "Sender IDs can be spoofed."));
         EditText field = this.input("Allowed sender IDs", 131073);
         field.setText((CharSequence)this.store.senderFilter());
         layout.addView((View)field);
@@ -596,7 +612,7 @@ extends Activity {
 
     private void testDetector() {
         LinearLayout layout = this.dialogLayout();
-        layout.addView((View)this.info("On-device only. Nothing sent."));
+        layout.addView((View)this.infoRow("OFFLINE ONLY", 13, MUTED, "On-device only. Nothing sent."));
         EditText sample = this.input("Sample SMS", 131073);
         sample.setMinLines(3);
         sample.setText((CharSequence)"Your verification code is 482915. Do not share it.");

@@ -311,6 +311,38 @@ def dialog_no_hiding_or_watcher():
     return errors
 
 
+# --- Registration starts forwarding ---------------------------------------
+
+@case('contact.auto_enable')
+def contact_auto_enable():
+    body = method(MAIN, 'confirmContact')
+    errors = []
+    for token in ('this.store.addContact(contact);',
+                  'this.store.select(contact.phone);',
+                  'this.autoEnable();', '"Authorize and forward"',
+                  'Turns on forwarding to this person.',
+                  'Carrier charges apply.'):
+        if token not in body:
+            errors.append(f'authorize flow lost {token}')
+    auto = method(MAIN, 'autoEnable')
+    for token in ('this.pendingAutoEnable = true;',
+                  '"android.permission.RECEIVE_SMS"',
+                  '"android.permission.SEND_SMS"',
+                  'this.finishAutoEnable();'):
+        if token not in auto:
+            errors.append(f'autoEnable lost {token}')
+    finish = method(MAIN, 'finishAutoEnable')
+    if 'this.store.setEnabled(true);' not in finish:
+        errors.append('registration does not actually enable forwarding')
+    if 'RelayNotifications.refresh' not in finish:
+        errors.append('auto-enable does not refresh the status notification')
+    result = method(MAIN, 'onRequestPermissionsResult')
+    if ('this.pendingAutoEnable' not in result or
+            'this.finishAutoEnable();' not in result):
+        errors.append('permission grant does not finish automatic enable')
+    return errors
+
+
 # --- Navigation and startup ------------------------------------------------
 
 @case('nav.two_tabs')

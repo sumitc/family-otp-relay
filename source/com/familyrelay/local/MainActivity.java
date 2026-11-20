@@ -68,6 +68,7 @@ extends Activity {
     private String tab = "Live";
     private ScrollView pageScroll;
     private boolean automaticProfileAttempted;
+    private boolean pendingAutoEnable;
     private String profileStatus = "QR from your SMS SIM.";
     private String cachedQrText;
     private Bitmap cachedQr;
@@ -661,10 +662,17 @@ extends Activity {
     }
 
     private void confirmContact(ContactCard contact) {
-        UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Authorize " + contact.name + "?")).setMessage((CharSequence)("Phone: " + contact.phone + "\n\nConfirm in person. Full OTPs when selected.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Authorize contact", (dialog, which) -> {
+        UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Authorize " + contact.name + "?")).setMessage((CharSequence)("Phone: " + contact.phone + "\n\nConfirm in person. Turns on forwarding to this person.\n\nFull OTPs, including bank and sign-in codes. Carrier charges apply.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Authorize and forward", (dialog, which) -> {
             try {
                 this.store.addContact(contact);
+                if (this.store.enabled()) {
+                    this.store.setEnabled(false);
+                }
+                if (!contact.phone.equals(this.store.selectedPhone())) {
+                    this.store.select(contact.phone);
+                }
                 this.tab = "People";
+                this.autoEnable();
                 this.render();
                 Toast.makeText((Context)this, (CharSequence)"Contact registered", (int)0).show();
             }
@@ -672,6 +680,43 @@ extends Activity {
                 this.showError(e.getMessage());
             }
         }).create());
+    }
+
+    /** Turn forwarding on as part of registration, without an extra tap. */
+    private void autoEnable() {
+        if (this.store.profile() == null || this.store.recipient() == null) {
+            return;
+        }
+        if (!this.getPackageManager().hasSystemFeature("android.hardware.telephony")) {
+            this.showError("No carrier SMS support.");
+            return;
+        }
+        ArrayList<String> missing = new ArrayList<String>();
+        for (String permission : new String[]{"android.permission.RECEIVE_SMS", "android.permission.SEND_SMS"}) {
+            if (this.checkSelfPermission(permission) == 0) continue;
+            missing.add(permission);
+        }
+        if (Build.VERSION.SDK_INT >= 33 && this.checkSelfPermission("android.permission.POST_NOTIFICATIONS") != 0) {
+            missing.add("android.permission.POST_NOTIFICATIONS");
+        }
+        if (!missing.isEmpty()) {
+            this.pendingAutoEnable = true;
+            UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Allow SMS forwarding").setMessage((CharSequence)"Receive: detect OTPs locally.\nSend: forward to your contact.\nNotifications: status and pause.\nNo internet. Old SMS unread.").setNegativeButton((CharSequence)"Cancel", (dialog, which) -> this.pendingAutoEnable = false).setPositiveButton((CharSequence)"Continue", (dialog, which) -> this.requestPermissions(missing.toArray(new String[0]), 10)).create());
+            return;
+        }
+        this.finishAutoEnable();
+    }
+
+    private void finishAutoEnable() {
+        if (!RelayNotifications.allowed((Context)this)) {
+            RelayNotifications.refresh((Context)this);
+            if (!RelayNotifications.allowed((Context)this)) {
+                this.showError("Allow Improm alerts, then forwarding can start.");
+                return;
+            }
+        }
+        this.store.setEnabled(true);
+        RelayNotifications.refresh((Context)this);
     }
 
     private void testDetector() {
@@ -735,11 +780,19 @@ extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == 10) {
             if (!SmsReceiver.hasSmsPermissions((Context)this)) {
+                this.pendingAutoEnable = false;
                 this.showError("SMS permission not granted. Allow it in App info.");
                 return;
             }
             if (!RelayNotifications.allowed((Context)this)) {
+                this.pendingAutoEnable = false;
                 UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Alerts blocked").setMessage((CharSequence)"Allow Improm alerts, then tap Turn on forwarding again.").setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Open settings", (dialog, which) -> this.startActivity(new Intent("android.settings.APP_NOTIFICATION_SETTINGS").putExtra("android.provider.extra.APP_PACKAGE", this.getPackageName()).putExtra("android.provider.extra.CHANNEL_ID", "relay_status"))).create());
+                return;
+            }
+            if (this.pendingAutoEnable) {
+                this.pendingAutoEnable = false;
+                this.finishAutoEnable();
+                this.render();
                 return;
             }
             this.showEnableConsent();

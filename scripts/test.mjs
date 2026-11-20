@@ -43,6 +43,16 @@ for (const block of blocks) {
 check((md.match(/<details>/g) || []).length >= 2, 'need at least 2 details blocks');
 check(md.includes('# Family OTP Relay'), 'missing title');
 
+// Versioning rule: every update must bump the Play Store code.
+const versionFile = readFileSync('VERSION', 'utf8');
+const vName = versionFile.match(/^versionName=(.+)$/m)?.[1]?.trim();
+const vCode = Number(versionFile.match(/^versionCode=(\d+)$/m)?.[1]);
+check(!!vName, 'VERSION is missing versionName');
+check(Number.isInteger(vCode) && vCode > 6, `versionCode ${vCode} must exceed archived 6`);
+if (vName && Number.isInteger(vCode)) {
+  check(md.includes(`Version ${vName} (code ${vCode})`), 'README version is stale');
+}
+
 const html = render(md);
 check(/name="viewport"[^>]*width=device-width/.test(html), 'missing viewport meta');
 check(!html.includes('<table'), 'rendered HTML has a table');

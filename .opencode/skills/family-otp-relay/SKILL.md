@@ -16,7 +16,9 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: 1.2.1 (`versionCode=6`), `minSdk 26`, `targetSdk 35`
+- Version: **1.2.2 (`versionCode=7`)** — source of truth is the `VERSION`
+  file. The archived binary was 1.2.1 / code 6.
+- `minSdk 26`, `targetSdk 35`
 
 ## Ground rules
 
@@ -27,6 +29,29 @@ they win; update this file.
   stay local; never force-add them to the public repo.
 - Anything stated about behavior must be traceable to the manifest, resources,
   or bytecode. Mark inference as inference.
+- **Every update bumps the version.** No commit changes shipped behavior,
+  resources, docs or APK without a `VERSION` bump first. See below.
+
+## Versioning (mandatory — Play Store)
+
+Never skip this. The Play Store rejects an upload whose `versionCode` was
+already used, even if `versionName` changed.
+
+- `VERSION` is the source of truth in this source-less repo:
+  `versionName=1.2.2`, `versionCode=7`.
+- On **every** change: increment `versionCode` by at least 1, update
+  `versionName` to match the release, then rebuild the APK and re-run checks.
+- `versionCode` is monotonic and never reused or decreased. `versionName` is
+  the human-facing label. Keep both in sync across `VERSION`, this skill,
+  `README.md` and the generated APK filename.
+- `scripts/patch-manifest.py` enforces a strictly increasing code and rejects
+  a `versionName` whose UTF-16 byte length changed (the binary string pool
+  cannot be resized safely). For a different-length name, regenerate the
+  manifest from real sources with aapt2/Gradle.
+- `scripts/build-apk.sh` patches the binary manifest from `VERSION` on every
+  build, so repeated builds never double-increment.
+- If real Gradle sources are restored, put the bump in `build.gradle` and keep
+  `VERSION` identical. Mention the new version in the commit message.
 
 ## Architecture map
 
@@ -144,10 +169,12 @@ An installable APK can still be rebuilt from the compiled artifacts:
   contains the binary `AndroidManifest.xml`, `resources.arsc` and `res/`.
 - `dex/release/mergeDexRelease/classes.dex` is the merged release DEX
   (app classes + ZXing QR scanner). No extra library DEX is needed.
+- `scripts/patch-manifest.py` rewrites the binary manifest's version fields
+  from `VERSION` before packaging.
 - `scripts/build-apk.sh` assembles those with `zip` (storing `resources.arsc`
   and `classes.dex`), then aligns and signs with uber-apk-signer 1.3.0 using
   APK Signature Scheme v2 + v3, verifies, and writes
-  `dist/family-otp-relay-1.2.1.apk`.
+  `dist/family-otp-relay-<versionName>.apk`.
 - Signer download is checksum-pinned to
   `e1299fd6fcf4da527dd53735b56127e8ea922a321128123b9c32d619bba1d835`.
 - The keystore lives at `signing/family-relay.jks` (gitignored); password comes

@@ -46,8 +46,20 @@ if [[ ! -f "$KS" ]]; then
     -dname "CN=Family OTP Relay, OU=Local, O=Family Relay, L=Hyderabad, ST=Telangana, C=IN" >/dev/null
 fi
 
+while IFS='=' read -r key value; do
+  case "$key" in
+    versionName) NAME="$value" ;;
+    versionCode) CODE="$value" ;;
+  esac
+done < "$ROOT/VERSION"
+: "${NAME:?VERSION missing versionName}"
+: "${CODE:?VERSION missing versionCode}"
+
 cd "$TMP/staging"
 unzip -q "$ROOT/$RES"
+python3 "$ROOT/scripts/patch-manifest.py" AndroidManifest.xml \
+  AndroidManifest.patched "$NAME" "$CODE"
+mv AndroidManifest.patched AndroidManifest.xml
 cp "$ROOT/$DEX" classes.dex
 rm -f "$TMP/unsigned.apk"
 zip -q -X -0 "$TMP/unsigned.apk" resources.arsc classes.dex
@@ -60,6 +72,7 @@ java -jar "$SIGNER" -a "$TMP/unsigned.apk" -o "$TMP/signed" \
 APK="$TMP/signed/unsigned-aligned-signed.apk"
 java -jar "$SIGNER" -a "$APK" -y >/dev/null
 
-cp "$APK" dist/family-otp-relay-1.2.1.apk
-echo "APK ready: dist/family-otp-relay-1.2.1.apk"
-shasum -a 256 dist/family-otp-relay-1.2.1.apk
+OUT="dist/family-otp-relay-$NAME.apk"
+cp "$APK" "$OUT"
+echo "APK ready: $OUT (versionName $NAME, versionCode $CODE)"
+shasum -a 256 "$OUT"

@@ -68,8 +68,10 @@ See the project brain skill for the full architecture and flows.
 
 ## APK
 
-- Local build: `dist/family-otp-relay-1.2.1.apk`.
+- Version 1.2.2 (code 7), from `VERSION`.
+- Local build: `dist/family-otp-relay-1.2.2.apk`.
 - Rebuild: `bash scripts/build-apk.sh`.
+- Bump the version on every change; Play Store needs a new code each upload.
 - Signed with a new local key, so uninstall an existing install first.
 
 ## Checks

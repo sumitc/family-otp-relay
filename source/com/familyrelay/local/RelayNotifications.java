@@ -31,6 +31,10 @@ public final class RelayNotifications {
             return false;
         }
         NotificationChannel channel = manager.getNotificationChannel(CHANNEL);
+        if (channel != null && channel.getImportance() == 0) {
+            manager.createNotificationChannel(new NotificationChannel(CHANNEL, (CharSequence)"SMS forwarding status", 2));
+            channel = manager.getNotificationChannel(CHANNEL);
+        }
         return manager.areNotificationsEnabled() && (channel == null || channel.getImportance() != 0);
     }
 

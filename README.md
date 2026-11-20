@@ -2,7 +2,7 @@
 
 On-device Android relay for OTP SMS. Branded **Improm** in the app.
 
-**Status:** 1.2.5 (code 10). Guided one-step setup, simpler Live screen.
+**Status:** 1.2.6 (code 11). Diagnoses and self-heals enable-permission checks.
 
 ## What it does
 
@@ -72,8 +72,8 @@ See the project brain skill for the full architecture and flows.
 
 ## APK
 
-- Version 1.2.5 (code 10), from `VERSION`.
-- Local build: `dist/Improm-1.2.5.apk`.
+- Version 1.2.6 (code 11), from `VERSION`.
+- Local build: `dist/Improm-1.2.6.apk`.
 - Rebuild: `npm run apk` (needs Android SDK + JDK 17).
 - Bump the version on every change; Play Store needs a new code each upload.
 - Signed with a new local key, so uninstall an existing install first.

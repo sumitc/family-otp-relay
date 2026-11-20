@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.5 (`versionCode=10`)** — source of truth is the `VERSION`
+- Version: **1.2.6 (`versionCode=11`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.5`, `versionCode=10`.
+- `VERSION` is the source of truth: `versionName=1.2.6`, `versionCode=11`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -215,3 +215,8 @@ javap -classpath "$CP" -p -c -constants com.familyrelay.local.SmsReceiver
 - `.gitignore` hides all artifacts, so `git status` looks empty even though
   ~16 MB of build output sits on disk. That is intentional.
 - No APK/AAB is present in the archive — only intermediate DEX/class files.
+- Enable failures are usually **notifications**, not SMS: `RelayNotifications.allowed()`
+  also requires the `relay_status` channel to have non-zero importance. Since
+  1.2.6 a blocked channel is re-created at DEFAULT importance, the permission
+  result names the exact blocker, and Forwarding settings shows live
+  `SMS: ready/missing • Alerts: ready/blocked`. Channel ID: `relay_status`.

@@ -313,6 +313,7 @@ extends Activity {
 
     private void forwardingSettings() {
         LinearLayout rules = this.dialogLayout();
+        rules.addView((View)this.text("SMS: " + (SmsReceiver.hasSmsPermissions((Context)this) ? "ready" : "missing") + "   \u2022   Alerts: " + (RelayNotifications.allowed((Context)this) ? "ready" : "blocked"), 12, MUTED, true));
         rules.addView((View)this.text("SMS RULES", 12, ORANGE, true));
         rules.addView((View)this.inlineInfo(this.text(this.store.senderFilter().isEmpty() ? "Senders: all" : "Senders: " + this.store.senderFilter(), 14, MUTED, false), "All senders checked by default.", true));
         rules.addView((View)this.button("Choose allowed senders", false, this::editSenders));
@@ -654,6 +655,15 @@ extends Activity {
             UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Enable notifications").setMessage((CharSequence)"Needed for status and pause.").setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Open settings", (dialog, which) -> this.startActivity(new Intent("android.settings.APP_NOTIFICATION_SETTINGS").putExtra("android.provider.extra.APP_PACKAGE", this.getPackageName()))).create());
             return;
         }
+        this.showEnableConsent();
+    }
+
+    private void showEnableConsent() {
+        ContactCard recipient = this.store.recipient();
+        if (recipient == null) {
+            this.showError("Finish setup in People first.");
+            return;
+        }
         UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Turn on forwarding?").setMessage((CharSequence)("Full OTPs to:\n" + recipient.name + "\n" + recipient.phone + "\n\nIncludes bank and sign-in codes. Others with these codes can access accounts. Carrier charges apply.\n\nWorks when closed. Pause anytime.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Turn on forwarding", (dialog, which) -> {
             this.store.setEnabled(true);
             RelayNotifications.refresh((Context)this);
@@ -664,11 +674,15 @@ extends Activity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == 10) {
-            if (SmsReceiver.hasSmsPermissions((Context)this) && RelayNotifications.allowed((Context)this)) {
-                this.requestEnable();
-            } else {
-                this.showError("Paused. Allow SMS and notifications in App info.");
+            if (!SmsReceiver.hasSmsPermissions((Context)this)) {
+                this.showError("SMS permission not granted. Allow it in App info.");
+                return;
             }
+            if (!RelayNotifications.allowed((Context)this)) {
+                UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Alerts blocked").setMessage((CharSequence)"Allow Improm alerts, then tap Turn on forwarding again.").setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Open settings", (dialog, which) -> this.startActivity(new Intent("android.settings.APP_NOTIFICATION_SETTINGS").putExtra("android.provider.extra.APP_PACKAGE", this.getPackageName()).putExtra("android.provider.extra.CHANNEL_ID", "relay_status"))).create());
+                return;
+            }
+            this.showEnableConsent();
         } else if (requestCode == 30) {
             this.render();
             if (this.checkSelfPermission("android.permission.RECEIVE_SMS") != 0) {

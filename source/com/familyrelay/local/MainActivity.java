@@ -479,22 +479,23 @@ extends Activity {
             return;
         }
         LinearLayout layout = this.dialogLayout();
-        EditText name = this.input("Device label", 8193);
+        EditText name = this.input("Name on your QR", 8193);
         EditText phone = this.input("Mobile number", 3);
         ContactCard existing = this.store.profile();
-        name.setText((CharSequence)PhoneProfile.deviceName());
+        name.setText((CharSequence)PhoneProfile.deviceName((Context)this));
         if (existing != null) {
             name.setText((CharSequence)existing.name);
             phone.setText((CharSequence)existing.phone);
         }
         layout.addView((View)name);
         layout.addView((View)phone);
+        layout.addView((View)this.infoRow("VISIBLE", 13, MUTED, "Others see this name on your QR."));
         layout.addView((View)this.infoRow("PRIVATE", 13, MUTED, "Your number is never uploaded."));
         AlertDialog dialog = new AlertDialog.Builder((Context)this).setTitle((CharSequence)"QR details").setView((View)layout).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Save QR", null).create();
         dialog.setOnShowListener(ignored -> dialog.getButton(-1).setOnClickListener(v -> {
             try {
                 String label = name.getText().toString().trim();
-                this.store.saveProfile(new ContactCard(label.isEmpty() ? PhoneProfile.deviceName() : label, phone.getText().toString()));
+                this.store.saveProfile(new ContactCard(label.isEmpty() ? PhoneProfile.deviceName((Context)this) : label, phone.getText().toString()));
                 dialog.dismiss();
                 this.render();
             }

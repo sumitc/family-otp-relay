@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.8 (`versionCode=13`)** — source of truth is the `VERSION`
+- Version: **1.2.9 (`versionCode=14`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.8`, `versionCode=13`.
+- `VERSION` is the source of truth: `versionName=1.2.9`, `versionCode=14`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -157,6 +157,16 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   row owns its forwarding action: "Forward here" switches recipient in one
   tap, while the selected row shows "Turn on forwarding" / "Pause
   forwarding". First enable still runs permissions + versioned consent.
+- **D13 Friendly QR labels (1.2.9+):** `PhoneProfile.deviceName(Context)`
+  prefers the user-set device name: `Settings.Secure["bluetooth_name"]`
+  only on API ≤ 31 (it throws `SecurityException` on targetSdk 32+), then
+  `Settings.Global.DEVICE_NAME`, then secure/system `"device_name"`.
+  All reads are wrapped in `RuntimeException` catch. No new permission:
+  `BluetoothAdapter.getName()` needs `BLUETOOTH_CONNECT`, which would
+  re-trigger restricted settings on sideloads. Fallback: `Build.MODEL`
+  unless it is code-like (no spaces + digits), else `Manufacturer phone`.
+  "QR details" prefills this name, hints "Name on your QR", and explains
+  "Others see this name on your QR." Users can always override it.
 
 ## Distribution constraints (checked 2026-11-20)
 

@@ -1,0 +1,10 @@
+{
+  "name": "family-otp-relay-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mobile-first docs page for family-otp-relay",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs"
+  }
+}

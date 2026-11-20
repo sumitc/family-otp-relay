@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.2.9 (`versionCode=14`)** — source of truth is the `VERSION`
+- Version: **1.3.0 (`versionCode=15`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.2.9`, `versionCode=14`.
+- `VERSION` is the source of truth: `versionName=1.3.0`, `versionCode=15`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -167,6 +167,33 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   unless it is code-like (no spaces + digits), else `Manufacturer phone`.
   "QR details" prefills this name, hints "Name on your QR", and explains
   "Others see this name on your QR." Users can always override it.
+- **D14 Dense controls, visible affordances (1.3.0+):** Each contact is one
+  compact row with icon-only actions (`⏸` pause, `▶` turn on, `→` forward,
+  `✕` remove; 38dp touch targets + content descriptions). Forwarding rules
+  (sender filter, SIM, privacy lines) are inline in People; the
+  "Forwarding settings" and "Allowed senders" popups are deleted. A divider
+  precedes "Try offline detector". SHOW QR renders the QR inline; SCAN QR
+  shows a camera glyph. Tapping the QR enlarges it.
+
+## UI principles (learned from user — apply to all future designs)
+
+These are essential, not preferences. Apply without being asked again:
+
+- **Show the thing, don't hide it behind a tap.** If a feature is a QR, show
+  the QR. If it opens the camera, show a camera icon. A label-only tile adds
+  drop-off.
+- **One row per item.** Lists use compact icon actions, never stacked
+  full-width buttons for pause/remove.
+- **Controls belong where the object is.** Put primary controls inline with
+  the list row or section. Do not hide them in a popup or a distant tab.
+- **Popups are for confirmation and detail, not primary actions.** Keep the
+  remove confirmation and the enlarged QR dialog; remove settings popups.
+- **Separate secondary/test tools with a divider** so they don't compete
+  with primary content.
+- **Icon buttons still need 38–48dp touch targets and content descriptions.**
+  Small visual, large tap area.
+- Explanations stay behind an inline `ⓘ` on the header line, 5–7 words
+  (D10). Never add a standalone explanation row.
 
 ## Distribution constraints (checked 2026-11-20)
 

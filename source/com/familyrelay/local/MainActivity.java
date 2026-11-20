@@ -182,17 +182,33 @@ extends Activity {
         return button;
     }
 
-    /** Compact side-by-side action used at the top of People. */
-    private LinearLayout choiceCard(String title, String subtitle, Runnable action) {
-        LinearLayout card = this.column();
-        card.setPadding(this.dp(12), this.dp(14), this.dp(12), this.dp(14));
-        card.setBackground((Drawable)this.background(-1, 20));
-        card.addView((View)this.text(title, 16, INK, true));
-        TextView sub = this.text(subtitle, 11, MUTED, false);
-        sub.setPadding(0, 0, 0, 0);
-        card.addView((View)sub);
-        card.setOnClickListener(v -> action.run());
-        return card;
+    /** Small icon-only action with a comfortable touch target. */
+    private TextView iconButton(String glyph, String description, Runnable action) {
+        TextView view = this.text(glyph, 20, ORANGE, true);
+        view.setGravity(17);
+        view.setPadding(this.dp(4), this.dp(4), this.dp(4), this.dp(4));
+        view.setBackground((Drawable)this.background(SOFT_ORANGE, 12));
+        view.setContentDescription((CharSequence)description);
+        view.setLayoutParams((ViewGroup.LayoutParams)new LinearLayout.LayoutParams(this.dp(38), this.dp(38)));
+        view.setOnClickListener(v -> {
+            try {
+                action.run();
+            }
+            catch (IllegalArgumentException | IllegalStateException e) {
+                this.showError(e.getMessage());
+            }
+        });
+        return view;
+    }
+
+    /** Thin separator before secondary and testing tools. */
+    private View divider() {
+        View line = new View((Context)this);
+        line.setBackgroundColor(MUTED);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, 1);
+        params.setMargins(0, this.dp(16), 0, this.dp(4));
+        line.setLayoutParams((ViewGroup.LayoutParams)params);
+        return line;
     }
 
     /** Small inline info icon with a comfortable touch target. */
@@ -325,52 +341,60 @@ extends Activity {
         this.activity();
     }
 
-    private void forwardingSettings() {
-        LinearLayout rules = this.dialogLayout();
-        rules.addView((View)this.text("SMS: " + (SmsReceiver.hasSmsPermissions((Context)this) ? "ready" : "missing") + "   \u2022   Alerts: " + (RelayNotifications.allowed((Context)this) ? "ready" : "blocked"), 12, MUTED, true));
-        rules.addView((View)this.text("SMS RULES", 12, ORANGE, true));
-        rules.addView((View)this.inlineInfo(this.text(this.store.senderFilter().isEmpty() ? "Senders: all" : "Senders: " + this.store.senderFilter(), 14, MUTED, false), "All senders checked by default.", true));
-        rules.addView((View)this.button("Choose allowed senders", false, this::editSenders));
-        Switch sim = new Switch((Context)this);
-        sim.setText((CharSequence)"Use receiving SIM");
-        sim.setTextColor(INK);
-        sim.setTextSize(14.0f);
-        sim.setPadding(0, this.dp(16), 0, this.dp(6));
-        sim.setChecked(this.store.incomingSim());
-        sim.setOnCheckedChangeListener((view, checked) -> this.store.setIncomingSim(checked));
-        rules.addView((View)this.inlineInfo((View)sim, "Falls back to default SMS SIM.", false));
-        rules.addView((View)this.infoRow("PRIVACY", 13, INK, "No internet. Detection runs on-device."));
-        rules.addView((View)this.infoRow("COSTS", 13, INK, "Codes never saved. Carrier charges apply."));
-        rules.addView((View)this.infoRow("RELAY", 13, INK, "One-way only. Recipient needs own setup."));
-        rules.addView((View)this.button("Try offline detector", false, this::testDetector));
-        ScrollView scroll = new ScrollView((Context)this);
-        scroll.addView((View)rules);
-        UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Forwarding settings").setView((View)scroll).setPositiveButton((CharSequence)"Done", null).create());
-    }
-
     private void people() {
         ContactCard me = this.store.profile();
         LinearLayout choices = new LinearLayout((Context)this);
         choices.setOrientation(0);
         LinearLayout.LayoutParams showParams = new LinearLayout.LayoutParams(0, -2, 1.0f);
         showParams.setMargins(0, this.dp(8), this.dp(4), 0);
-        LinearLayout.LayoutParams scanParams = new LinearLayout.LayoutParams(0, -2, 1.0f);
+        LinearLayout.LayoutParams scanParams = new LinearLayout.LayoutParams(0, -1, 1.0f);
         scanParams.setMargins(this.dp(4), this.dp(8), 0, 0);
-        choices.addView((View)this.choiceCard("SHOW QR", "to receive OTPs", () -> {
-            if (me == null) {
+
+        LinearLayout show = this.column();
+        show.setPadding(this.dp(10), this.dp(10), this.dp(10), this.dp(10));
+        show.setBackground((Drawable)this.background(-1, 20));
+        show.addView((View)this.text("SHOW QR", 15, INK, true));
+        TextView showSub = this.text("to receive OTPs", 10, MUTED, false);
+        showSub.setPadding(0, 0, 0, 0);
+        show.addView((View)showSub);
+        if (me == null) {
+            show.addView((View)this.button("Create my QR", true, () -> {
                 this.requestAutomaticProfile();
                 this.render();
-            } else {
-                this.showQr();
-            }
-        }), (ViewGroup.LayoutParams)showParams);
-        choices.addView((View)this.choiceCard("SCAN QR", "to forward OTPs", () -> {
+            }));
+        } else {
+            ImageView qr = this.qrImage(me);
+            qr.setContentDescription((CharSequence)"My contact QR");
+            qr.setOnClickListener(v -> this.showQr());
+            show.addView((View)qr, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-1, this.dp(120)));
+            TextView enlarge = this.text("Enlarge", 11, ORANGE, true);
+            enlarge.setPadding(0, this.dp(2), 0, 0);
+            enlarge.setOnClickListener(v -> this.showQr());
+            show.addView((View)enlarge);
+        }
+        choices.addView((View)show, (ViewGroup.LayoutParams)showParams);
+
+        LinearLayout scan = this.column();
+        scan.setGravity(17);
+        scan.setPadding(this.dp(10), this.dp(10), this.dp(10), this.dp(10));
+        scan.setBackground((Drawable)this.background(-1, 20));
+        scan.setContentDescription((CharSequence)"Scan a contact QR");
+        TextView camera = this.text("\uD83D\uDCF7", 26, INK, false);
+        camera.setGravity(17);
+        camera.setPadding(0, this.dp(12), 0, this.dp(8));
+        scan.addView((View)camera);
+        scan.addView((View)this.text("SCAN QR", 15, INK, true));
+        TextView scanSub = this.text("to forward OTPs", 10, MUTED, false);
+        scanSub.setPadding(0, 0, 0, 0);
+        scan.addView((View)scanSub);
+        scan.setOnClickListener(v -> {
             if (me == null) {
                 this.showError("Create your QR first.");
             } else {
                 this.startActivityForResult(new Intent((Context)this, ScanActivity.class), 20);
             }
-        }), (ViewGroup.LayoutParams)scanParams);
+        });
+        choices.addView((View)scan, (ViewGroup.LayoutParams)scanParams);
         this.content.addView((View)choices);
         if (me == null) {
             this.content.addView((View)this.text(this.profileStatus, 13, MUTED, false));
@@ -388,21 +412,35 @@ extends Activity {
         }
         for (ContactCard contact : this.store.contacts()) {
             LinearLayout person = this.card();
+            person.setOrientation(0);
+            person.setGravity(16);
+            person.setPadding(this.dp(12), this.dp(8), this.dp(8), this.dp(8));
             boolean selected = contact.phone.equals(this.store.selectedPhone());
-            person.addView((View)this.text(contact.name, 20, INK, true));
-            person.addView((View)this.text(contact.phone, 14, MUTED, false));
+
+            LinearLayout identity = this.column();
+            TextView name = this.text(contact.name, 15, INK, true);
+            name.setPadding(0, 0, 0, 0);
+            TextView phone = this.text(contact.phone, 11, MUTED, false);
+            phone.setPadding(0, 0, 0, 0);
+            identity.addView((View)name);
+            identity.addView((View)phone);
+            person.addView((View)identity, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(0, -2, 1.0f));
+
+            LinearLayout actions = new LinearLayout((Context)this);
+            actions.setOrientation(0);
+            actions.setGravity(16);
             if (selected) {
                 if (this.store.enabled()) {
-                    person.addView((View)this.button("Pause forwarding", false, () -> {
+                    actions.addView((View)this.iconButton("\u23F8", "Pause forwarding", () -> {
                         this.store.setEnabled(false);
                         RelayNotifications.refresh((Context)this);
                         this.render();
                     }));
                 } else {
-                    person.addView((View)this.button("Turn on forwarding", true, this::requestEnable));
+                    actions.addView((View)this.iconButton("\u25B6", "Turn on forwarding", this::requestEnable));
                 }
             } else {
-                person.addView((View)this.button("Forward here", false, () -> {
+                actions.addView((View)this.iconButton("\u2192", "Forward to this person", () -> {
                     this.store.select(contact.phone);
                     RelayNotifications.refresh((Context)this);
                     if (!this.store.enabled()) {
@@ -412,13 +450,43 @@ extends Activity {
                     }
                 }));
             }
-            person.addView((View)this.button("Remove", false, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
+            LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(this.dp(38), this.dp(38));
+            removeParams.setMargins(this.dp(6), 0, 0, 0);
+            actions.addView((View)this.iconButton("\u2715", "Remove " + contact.name, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
                 this.store.removeContact(contact.phone);
                 RelayNotifications.refresh((Context)this);
                 this.render();
-            }).create())));
+            }).create())), (ViewGroup.LayoutParams)removeParams);
+            person.addView((View)actions, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-2, -2));
         }
-        this.content.addView((View)this.button("Forwarding settings", false, this::forwardingSettings));
+
+        LinearLayout rules = this.card();
+        rules.addView((View)this.infoRow("FORWARDING RULES", 12, ORANGE, "Applies to all registered people."));
+        rules.addView((View)this.text("SMS: " + (SmsReceiver.hasSmsPermissions((Context)this) ? "ready" : "missing") + "   \u2022   Alerts: " + (RelayNotifications.allowed((Context)this) ? "ready" : "blocked"), 12, MUTED, true));
+        EditText senders = this.input("Allowed senders (blank = all)", 131073);
+        senders.setText((CharSequence)this.store.senderFilter());
+        rules.addView((View)senders);
+        rules.addView((View)this.button("Save allowed senders", false, () -> {
+            if (this.store.enabled()) {
+                this.showError("Pause forwarding first.");
+                return;
+            }
+            this.store.setSenderFilter(senders.getText().toString());
+            this.render();
+        }));
+        Switch sim = new Switch((Context)this);
+        sim.setText((CharSequence)"Use receiving SIM");
+        sim.setTextColor(INK);
+        sim.setTextSize(14.0f);
+        sim.setPadding(0, this.dp(10), 0, this.dp(4));
+        sim.setChecked(this.store.incomingSim());
+        sim.setOnCheckedChangeListener((view, checked) -> this.store.setIncomingSim(checked));
+        rules.addView((View)this.inlineInfo((View)sim, "Falls back to default SMS SIM.", false));
+        rules.addView((View)this.infoRow("PRIVACY", 13, INK, "No internet. Detection runs on-device."));
+        rules.addView((View)this.infoRow("COSTS", 13, INK, "Codes never saved. Carrier charges apply."));
+        rules.addView((View)this.infoRow("RELAY", 13, INK, "One-way only. Recipient needs own setup."));
+        this.content.addView((View)this.divider());
+        this.content.addView((View)this.button("Try offline detector", false, this::testDetector));
     }
 
     private void activity() {
@@ -617,23 +685,6 @@ extends Activity {
             catch (IllegalArgumentException | IllegalStateException e) {
                 this.showError(e.getMessage());
             }
-        }).create());
-    }
-
-    private void editSenders() {
-        if (this.store.enabled()) {
-            this.showError("Pause forwarding first.");
-            return;
-        }
-        LinearLayout layout = this.dialogLayout();
-        layout.addView((View)this.infoRow("ALL SENDERS", 13, MUTED, "Leave empty for all senders."));
-        layout.addView((View)this.infoRow("SPOOFING", 13, MUTED, "Sender IDs can be spoofed."));
-        EditText field = this.input("Allowed sender IDs", 131073);
-        field.setText((CharSequence)this.store.senderFilter());
-        layout.addView((View)field);
-        UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)"Allowed senders").setView((View)layout).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Save", (dialog, which) -> {
-            this.store.setSenderFilter(field.getText().toString());
-            this.render();
         }).create());
     }
 

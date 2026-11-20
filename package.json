@@ -5,6 +5,7 @@
   "description": "Mobile-first docs page for family-otp-relay",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node scripts/test.mjs"
+    "test": "node scripts/test.mjs",
+    "apk": "bash scripts/build-apk.sh"
   }
 }

@@ -6,3 +6,6 @@ local.properties
 signing/
 dist/
 node_modules/
+apk-build/
+signed/
+*-unsigned.apk

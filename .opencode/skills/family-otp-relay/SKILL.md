@@ -136,6 +136,26 @@ npm run build   # renders dist/index.html from README.md
 npm test        # enforces the mobile-first rules above
 ```
 
+### APK reconstruction (no Gradle source)
+
+An installable APK can still be rebuilt from the compiled artifacts:
+
+- `linked-resources-binary-format/release/.../linked-resources-binary-format-release.ap_`
+  contains the binary `AndroidManifest.xml`, `resources.arsc` and `res/`.
+- `dex/release/mergeDexRelease/classes.dex` is the merged release DEX
+  (app classes + ZXing QR scanner). No extra library DEX is needed.
+- `scripts/build-apk.sh` assembles those with `zip` (storing `resources.arsc`
+  and `classes.dex`), then aligns and signs with uber-apk-signer 1.3.0 using
+  APK Signature Scheme v2 + v3, verifies, and writes
+  `dist/family-otp-relay-1.2.1.apk`.
+- Signer download is checksum-pinned to
+  `e1299fd6fcf4da527dd53735b56127e8ea922a321128123b9c32d619bba1d835`.
+- The keystore lives at `signing/family-relay.jks` (gitignored); password comes
+  from `KEYSTORE_PASS` or defaults to `FamilyRelay2026`.
+- This is a **new local signing key**, so it cannot update an existing install
+  of the original release. Uninstall first, then sideload.
+- APK files stay in `dist/`, which is gitignored — do not commit binaries.
+
 To re-derive architecture facts from the local artifacts:
 
 ```bash

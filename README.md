@@ -66,6 +66,12 @@ See the project brain skill for the full architecture and flows.
 
 </details>
 
+## APK
+
+- Local build: `dist/family-otp-relay-1.2.1.apk`.
+- Rebuild: `bash scripts/build-apk.sh`.
+- Signed with a new local key, so uninstall an existing install first.
+
 ## Checks
 
 ```bash

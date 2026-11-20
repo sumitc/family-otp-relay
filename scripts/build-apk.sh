@@ -118,5 +118,6 @@ java -jar "$SIGNER" -a "$APK" -y 2>&1 | grep -E 'zipalign verified|signature ver
 
 OUT="dist/Improm-$NAME.apk"
 cp "$APK" "$OUT"
+python3 "$ROOT/scripts/verify-apk.py" "$OUT" "$NAME" "$CODE"
 echo "APK ready: $OUT (versionName $NAME, versionCode $CODE)"
 shasum -a 256 "$OUT"

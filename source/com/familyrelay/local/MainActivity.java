@@ -375,7 +375,6 @@ extends Activity {
         choices.addView((View)show, (ViewGroup.LayoutParams)showParams);
 
         LinearLayout scan = this.column();
-        scan.setGravity(17);
         scan.setPadding(this.dp(10), this.dp(10), this.dp(10), this.dp(10));
         scan.setBackground((Drawable)this.background(-1, 20));
         scan.setContentDescription((CharSequence)"Scan a contact QR");
@@ -431,16 +430,16 @@ extends Activity {
             actions.setGravity(16);
             if (selected) {
                 if (this.store.enabled()) {
-                    actions.addView((View)this.iconButton("\u23F8", "Pause forwarding", () -> {
+                    actions.addView((View)this.iconButton("||", "Pause forwarding", () -> {
                         this.store.setEnabled(false);
                         RelayNotifications.refresh((Context)this);
                         this.render();
                     }));
                 } else {
-                    actions.addView((View)this.iconButton("\u25B6", "Turn on forwarding", this::requestEnable));
+                    actions.addView((View)this.iconButton(">", "Turn on forwarding", this::requestEnable));
                 }
             } else {
-                actions.addView((View)this.iconButton("\u2192", "Forward to this person", () -> {
+                actions.addView((View)this.iconButton("->", "Forward to this person", () -> {
                     this.store.select(contact.phone);
                     RelayNotifications.refresh((Context)this);
                     if (!this.store.enabled()) {
@@ -452,7 +451,7 @@ extends Activity {
             }
             LinearLayout.LayoutParams removeParams = new LinearLayout.LayoutParams(this.dp(38), this.dp(38));
             removeParams.setMargins(this.dp(6), 0, 0, 0);
-            actions.addView((View)this.iconButton("\u2715", "Remove " + contact.name, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
+            actions.addView((View)this.iconButton("\uD83D\uDDD1", "Remove " + contact.name, () -> UiProtection.show(new AlertDialog.Builder((Context)this).setTitle((CharSequence)("Remove " + contact.name + "?")).setMessage((CharSequence)(selected ? "Pauses forwarding too." : "Removes local access.")).setNegativeButton((CharSequence)"Cancel", null).setPositiveButton((CharSequence)"Remove", (dialog, which) -> {
                 this.store.removeContact(contact.phone);
                 RelayNotifications.refresh((Context)this);
                 this.render();
@@ -460,31 +459,6 @@ extends Activity {
             person.addView((View)actions, (ViewGroup.LayoutParams)new LinearLayout.LayoutParams(-2, -2));
         }
 
-        LinearLayout rules = this.card();
-        rules.addView((View)this.infoRow("FORWARDING RULES", 12, ORANGE, "Applies to all registered people."));
-        rules.addView((View)this.text("SMS: " + (SmsReceiver.hasSmsPermissions((Context)this) ? "ready" : "missing") + "   \u2022   Alerts: " + (RelayNotifications.allowed((Context)this) ? "ready" : "blocked"), 12, MUTED, true));
-        EditText senders = this.input("Allowed senders (blank = all)", 131073);
-        senders.setText((CharSequence)this.store.senderFilter());
-        rules.addView((View)senders);
-        rules.addView((View)this.button("Save allowed senders", false, () -> {
-            if (this.store.enabled()) {
-                this.showError("Pause forwarding first.");
-                return;
-            }
-            this.store.setSenderFilter(senders.getText().toString());
-            this.render();
-        }));
-        Switch sim = new Switch((Context)this);
-        sim.setText((CharSequence)"Use receiving SIM");
-        sim.setTextColor(INK);
-        sim.setTextSize(14.0f);
-        sim.setPadding(0, this.dp(10), 0, this.dp(4));
-        sim.setChecked(this.store.incomingSim());
-        sim.setOnCheckedChangeListener((view, checked) -> this.store.setIncomingSim(checked));
-        rules.addView((View)this.inlineInfo((View)sim, "Falls back to default SMS SIM.", false));
-        rules.addView((View)this.infoRow("PRIVACY", 13, INK, "No internet. Detection runs on-device."));
-        rules.addView((View)this.infoRow("COSTS", 13, INK, "Codes never saved. Carrier charges apply."));
-        rules.addView((View)this.infoRow("RELAY", 13, INK, "One-way only. Recipient needs own setup."));
         this.content.addView((View)this.divider());
         this.content.addView((View)this.button("Try offline detector", false, this::testDetector));
     }

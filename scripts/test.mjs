@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { render } from './build.mjs';
+import { checkPage } from './page-check.mjs';
 
 const md = readFileSync('README.md', 'utf8').replace(/\r\n/g, '\n');
 const lines = md.split('\n');
@@ -59,9 +60,15 @@ check(!html.includes('<table'), 'rendered HTML has a table');
 check(html.includes('<h1>Family OTP Relay</h1>'), 'rendered HTML missing h1');
 check(html.includes('<details>'), 'rendered HTML missing details');
 
+// A build is not done until the generated page actually loads over HTTP.
+for (const error of await checkPage()) {
+  errors.push(`page load: ${error}`);
+}
+
 if (errors.length) {
   console.error(`FAIL (${errors.length}):`);
   for (const e of errors) console.error(`  - ${e}`);
   process.exit(1);
 }
 console.log(`PASS — ${lines.length} lines, ${codeBlocks} code block(s), mobile rules OK`);
+console.log('PASS — docs page loads over HTTP');

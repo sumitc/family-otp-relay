@@ -5,7 +5,9 @@
   "description": "Mobile-first docs page for family-otp-relay",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node scripts/test.mjs",
-    "apk": "bash scripts/build-apk.sh"
+    "check:page": "node scripts/page-check.mjs",
+    "test": "npm run build && node scripts/test.mjs",
+    "apk": "npm test && bash scripts/build-apk.sh",
+    "verify": "npm run apk"
   }
 }

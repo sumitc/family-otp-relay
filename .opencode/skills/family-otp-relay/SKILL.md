@@ -16,7 +16,7 @@ they win; update this file.
 - GitHub: https://github.com/sumitc/family-otp-relay (public)
 - Package: `com.familyrelay.local`
 - App label shipped in resources: **Improm** (not "Family Relay")
-- Version: **1.3.0 (`versionCode=15`)** — source of truth is the `VERSION`
+- Version: **1.3.1 (`versionCode=16`)** — source of truth is the `VERSION`
   file. The archived binary was 1.2.1 / code 6.
 - `minSdk 26`, `targetSdk 35`
 
@@ -36,7 +36,7 @@ they win; update this file.
 Never skip this. The Play Store rejects an upload whose `versionCode` was
 already used, even if `versionName` changed.
 
-- `VERSION` is the source of truth: `versionName=1.3.0`, `versionCode=15`.
+- `VERSION` is the source of truth: `versionName=1.3.1`, `versionCode=16`.
 - On **every** change: increment `versionCode` by at least 1, update
   `versionName` to match the release, then rebuild the APK and re-run checks.
 - `versionCode` is monotonic and never reused or decreased. `versionName` is
@@ -168,12 +168,14 @@ trusted person (including sign-in/payment codes). Forwarding is **one-way**.
   "QR details" prefills this name, hints "Name on your QR", and explains
   "Others see this name on your QR." Users can always override it.
 - **D14 Dense controls, visible affordances (1.3.0+):** Each contact is one
-  compact row with icon-only actions (`⏸` pause, `▶` turn on, `→` forward,
-  `✕` remove; 38dp touch targets + content descriptions). Forwarding rules
-  (sender filter, SIM, privacy lines) are inline in People; the
-  "Forwarding settings" and "Allowed senders" popups are deleted. A divider
-  precedes "Try offline detector". SHOW QR renders the QR inline; SCAN QR
-  shows a camera glyph. Tapping the QR enlarges it.
+  compact row with small actions (38dp targets + content descriptions).
+  1.3.1 uses plain text glyphs: `||` pause, `>` turn on, `->` forward, `🗑`
+  bin for remove — the Unicode symbol icons looked odd. There is **no**
+  forwarding-rules section: sender filter, SIM switch and privacy lines were
+  removed entirely as confusing; "Forwarding settings" and "Allowed senders"
+  popups are gone. A divider precedes "Try offline detector". SHOW QR renders
+  the QR inline; SCAN QR shows a camera glyph with its title top-aligned.
+  Tapping the QR enlarges it.
 
 ## UI principles (learned from user — apply to all future designs)
 
@@ -190,10 +192,16 @@ These are essential, not preferences. Apply without being asked again:
   remove confirmation and the enlarged QR dialog; remove settings popups.
 - **Separate secondary/test tools with a divider** so they don't compete
   with primary content.
-- **Icon buttons still need 38–48dp touch targets and content descriptions.**
-  Small visual, large tap area.
+- **Small actions need 38–48dp touch targets and content descriptions.**
+  Prefer plain text glyphs (`||`, `>`, `->`) over unusual Unicode symbols.
+- **Align card titles to the top.** Do not vertically centre a card whose
+  label is a title; it reads as mid-page clutter.
 - Explanations stay behind an inline `ⓘ` on the header line, 5–7 words
   (D10). Never add a standalone explanation row.
+- **Never confirm a build without load checks.** `npm test` serves
+  `dist/index.html` over loopback HTTP and asserts it loads. `npm run apk`
+  runs those tests first, then validates the APK archive, manifest version,
+  launcher declaration and core DEX classes.
 
 ## Distribution constraints (checked 2026-11-20)
 
@@ -245,8 +253,12 @@ Keep the GitHub README short enough to scan on a 360px phone:
 
 ```bash
 npm run build   # renders dist/index.html from README.md
-npm test        # enforces the mobile-first rules above
+npm test        # builds docs, enforces mobile rules, loads page over HTTP
+npm run apk     # runs tests, builds APK, verifies archive/manifest/DEX
 ```
+
+Never report a build as done unless `npm test` reported both PASS lines and
+`npm run apk` printed `APK verified: ...` before `APK ready: ...`.
 
 ### APK build (no Gradle project)
 
